@@ -93,7 +93,7 @@ router.get(`/:id`, async (req, res) => {
           name: product.name,
           description: product.description,
           image: product.image ? `/pbl6/products/image/${product.id}` : null, // Đường dẫn đến route mới
-          images: product.images ? `/pbl6/products/images/${product.id}` : null, // Đường dẫn đến route mới
+          images: product.images.map(image => `/pbl6/products//gallery/${product.id}/images/${image.id}`),
           brand: product.brand,
           price: product.price,
           category: product.category,
