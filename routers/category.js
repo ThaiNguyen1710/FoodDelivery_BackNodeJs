@@ -72,5 +72,14 @@ router.delete('/:id', (req, res)=>{
        return res.status(500).json({success: false, error: err}) 
     })
 })
+router.get(`/get/count`, async (req, res) => {
+    const categoryCount = await Category.countDocuments();
 
+    if (!categoryCount) {
+        res.status(500).json({ success: false });
+    }
+    res.send({
+        categoryCount: categoryCount
+    });
+})
 module.exports =router;

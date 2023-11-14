@@ -9,12 +9,13 @@ function authJwt() {
         isRevoked: isRevoked
     }).unless({
         path: [
-            {url: /\/pbl6\/products(.*)/ , methods: ['GET','OPTIONS', 'POST', 'PUT', 'DELETE'] },
+            {url: /\/pbl6\/product(.*)/ , methods: ['GET','OPTIONS', 'POST', 'PUT', 'DELETE'] },
             {url: /\/pbl6\/category(.*)/ , methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE'] },
             `${api}/users/login`,
             `${api}/users/register`,
-            { url: /\/pbl6\/users(.*)/, methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE'] },
-            { url: /\/pbl6\/orders(.*)/, methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE'] },
+            { url: /\/pbl6\/user(.*)/, methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE'] },
+            { url: /\/pbl6\/shipper(.*)/, methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE'] },
+            { url: /\/pbl6\/order(.*)/, methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE'] },
             {url: /\/public\/uploads(.*)/ , methods: ['GET','OPTIONS', 'POST', 'PUT', 'DELETE'] },
             {url: /\/(.*)/ , methods: ['GET','OPTIONS', 'POST', 'PUT', 'DELETE'] },
         ]

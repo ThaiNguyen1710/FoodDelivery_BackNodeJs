@@ -1,4 +1,4 @@
-const {User} = require('../models/user');
+const {Shipper} = require('../models/shipper');
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
@@ -6,13 +6,13 @@ const jwt = require('jsonwebtoken');
 
 router.get(`/`, async (req, res) => {
     try {
-      const userList = await User.find().select('-passwordHash');
+      const shipperList = await Shipper.find().select('-passwordHash');
   
-      if (!userList) {
-        return res.status(500).json({ success: false, error: 'Error fetching user list.' });
+      if (!shipperList) {
+        return res.status(500).json({ success: false, error: 'Error fetching shipper list.' });
       }
       
-      res.send(userList);
+      res.send(shipperList);
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
     }
@@ -20,13 +20,13 @@ router.get(`/`, async (req, res) => {
   
   router.get('/:id', async (req, res) => {
     try {
-      const user = await User.findById(req.params.id).select('-passwordHash');
+      const shipper = await Shipper.findById(req.params.id).select('-passwordHash');
   
-      if (!user) {
-        return res.status(404).json({ success: false, message: 'The user with the given ID was not found.' });
+      if (!shipper) {
+        return res.status(404).json({ success: false, message: 'The shipper with the given ID was not found.' });
       }
   
-      res.status(200).send(user);
+      res.status(200).send(shipper);
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
     }
@@ -35,16 +35,16 @@ router.get(`/`, async (req, res) => {
   
   router.put('/:id', async (req, res) => {
     try {
-      const userExist = await User.findById(req.params.id);
+      const shipperExist = await Shipper.findById(req.params.id);
       let newPassword;
       
       if (req.body.password) {
         newPassword = bcrypt.hashSync(req.body.password, 10);
       } else {
-        newPassword = userExist.passwordHash;
+        newPassword = shipperExist.passwordHash;
       }
   
-      const user = await User.findByIdAndUpdate(
+      const shipper = await Shipper.findByIdAndUpdate(
         req.params.id,
         {
           name: req.body.name,
@@ -54,19 +54,15 @@ router.get(`/`, async (req, res) => {
           passwordHash: newPassword,
           description: req.body.description,
           isAdmin: req.body.isAdmin,
-          image:req.body.image,
-          store:req.body.store,
-          openAt:req.body.openAt,
-          closeAt:req.body.closeAt
         },
         { new: true }
       );
   
-      if (!user) {
-        return res.status(400).send('The user cannot be created!');
+      if (!shipper) {
+        return res.status(400).send('The shipper cannot be created!');
       }
   
-      res.send(user);
+      res.send("shipper updated");
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
     }
@@ -74,24 +70,24 @@ router.get(`/`, async (req, res) => {
   
   router.post('/login', async (req, res) => {
     try {
-      const user = await User.findOne({ email: req.body.email });
+      const shipper = await Shipper.findOne({ email: req.body.email });
       const secret = process.env.secret;
   
-      if (!user) {
-        return res.status(400).send('The user not found');
+      if (!shipper) {
+        return res.status(400).send('The shipper not found');
       }
   
-      if (user && bcrypt.compareSync(req.body.password, user.passwordHash)) {
+      if (shipper && bcrypt.compareSync(req.body.password, shipper.passwordHash)) {
         const token = jwt.sign(
           {
-            userId: user.id,
-            isAdmin: user.isAdmin
+            shipperId: shipper.id,
+            isAdmin: shipper.isAdmin
           },
           secret,
           { expiresIn: '1d' }
         );
        
-        res.status(200).send({ user: user.email, token: token });
+        res.status(200).send({ shipper: shipper.email, token: token });
       } else {
         res.status(400).send('Password is wrong!');
       }
@@ -103,13 +99,13 @@ router.get(`/`, async (req, res) => {
   router.post('/register', async (req, res) => {
     try {
       // Kiểm tra xem email đã tồn tại hay chưa
-      const existingUser = await User.findOne({ email: req.body.email });
-      if (existingUser) {
+      const existingshipper = await Shipper.findOne({ email: req.body.email });
+      if (existingshipper) {
         return res.status(400).send('Email already exists. Please use a different email.');
       }
 
       // Nếu email chưa tồn tại, tiếp tục tạo người dùng mới
-      let user = new User({
+      let shipper = new Shipper({
         name: req.body.name,
         email: req.body.email,
         phone: req.body.phone,
@@ -117,16 +113,13 @@ router.get(`/`, async (req, res) => {
         passwordHash: bcrypt.hashSync(req.body.password, 10),
         description: req.body.description,
         isAdmin: req.body.isAdmin,
-        image:req.body.image,
-        store:req.body.store,
-        openAt:req.body.openAt,
-        closeAt:req.body.closeAt
+        image: req.body.image
       });
   
-      user = await user.save();
+      shipper = await shipper.save();
   
-      if (!user) {
-        return res.status(400).send('The user cannot be created!');
+      if (!shipper) {
+        return res.status(400).send('The shipper cannot be created!');
       }
   
       res.send("registered");
@@ -138,12 +131,12 @@ router.get(`/`, async (req, res) => {
   
   router.delete('/:id', async (req, res) => {
     try {
-      const user = await User.findByIdAndRemove(req.params.id);
+      const shipper = await Shipper.findByIdAndRemove(req.params.id);
       
-      if (user) {
-        return res.status(200).json({ success: true, message: 'The user is deleted!' });
+      if (shipper) {
+        return res.status(200).json({ success: true, message: 'The shipper is deleted!' });
       } else {
-        return res.status(404).json({ success: false, message: 'User not found!' });
+        return res.status(404).json({ success: false, message: 'shipper not found!' });
       }
     } catch (error) {
       return res.status(500).json({ success: false, error: error.message });
@@ -152,12 +145,12 @@ router.get(`/`, async (req, res) => {
 
 router.get(`/get/count`, async (req, res) => {
     try {
-      const userCount = await User.countDocuments();
+      const shipperCount = await Shipper.countDocuments();
       
-      if (userCount === null) {
+      if (shipperCount === null) {
         res.status(500).json({ success: false });
       } else {
-        res.status(200).json({ success: true, userCount: userCount });
+        res.status(200).json({ success: true, shipperCount: shipperCount });
       }
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });

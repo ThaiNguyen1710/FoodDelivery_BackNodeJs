@@ -21,10 +21,6 @@ const productSchema = mongoose.Schema({
         data: Buffer,
         contentType: String
     }],
-    brand: {
-        type: String,
-        default: ''
-    },
     price : {
         type: Number,
         default:0
@@ -44,12 +40,21 @@ const productSchema = mongoose.Schema({
     },
     isFeatured: {
         type: Boolean,
-        default: true,
+        default: false,
     },
     dateCreated: {
         type: Date,
         default: Date.now,
     },
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User',
+        required:true
+    },
+    // user: {
+    //     type: String,
+    //     default:null,
+    // },
 })
 
 productSchema.virtual('id').get(function () {

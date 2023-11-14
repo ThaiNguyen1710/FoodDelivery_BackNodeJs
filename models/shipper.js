@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const userSchema = new mongoose.Schema({
+const shipperSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
@@ -15,7 +15,6 @@ const userSchema = new mongoose.Schema({
     },
     address:{
         type: String,
-        default: null
     },
     passwordHash: {
         type: String,
@@ -23,37 +22,23 @@ const userSchema = new mongoose.Schema({
     },
     description:{
         type: String,
-        default: null
     },
     isAdmin: {
         type: Boolean,
         default: false,
     },
-    image: {
+    image:{
         type: String,
-        default: null,
-    },
-    store: {
-        type: String,
-        default: null,
-    },
-    openAt: {
-        type: String,
-        default: null,
-    },
-    closeAt: {
-        type: String,
-        default: null,
     }
 });
 
-userSchema.virtual('id').get(function () {
+shipperSchema.virtual('id').get(function () {
     return this._id.toHexString();
 });
 
-userSchema.set('toJSON', {
+shipperSchema.set('toJSON', {
     virtuals: true,
 });
 
-exports.User = mongoose.model('User', userSchema);
-exports.userSchema = userSchema;
+exports.Shipper = mongoose.model('Shipper', shipperSchema);
+exports.shipperSchema = shipperSchema;

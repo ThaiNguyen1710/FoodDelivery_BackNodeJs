@@ -1,10 +1,10 @@
 const mongoose = require('mongoose');
 
 const orderSchema = mongoose.Schema({
-    orderItems: [{
+    orderLists: [{
         type: mongoose.Schema.Types.ObjectId,
-        ref: 'OrderItem',
-        required:true
+        ref: 'OrderList',
+        default:null
     }],
     shippingAddress1: {
         type: String,
@@ -40,6 +40,7 @@ const orderSchema = mongoose.Schema({
     user: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
+        required:true
     },
     dateOrdered: {
         type: Date,
@@ -63,7 +64,7 @@ exports.Order = mongoose.model('Order', orderSchema);
 Order Example:
 
 {
-    "orderItems" : [
+    "orderLists" : [
         {
             "quantity": 3,
             "product" : "5fcfc406ae79b0a6a90d2585"

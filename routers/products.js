@@ -1,6 +1,7 @@
 const {Product} = require('../models/product');
 const express = require('express');
 const { Category } = require('../models/category');
+const { User } = require('../models/user');
 const router = express.Router();
 const mongoose = require('mongoose');
 const multer = require('multer');
@@ -44,15 +45,24 @@ const storage = multer.memoryStorage(); // Sử dụng memory storage để khô
 const uploadOptions = multer({ storage: storage });
 
 // http://localhost:8080/pbl6/products?categories=655087bce2f73b63aebfaad8
+// http://localhost:8080/pbl6/product?users=65538642c09896607e20ce6c
 router.get(`/`, async (req, res) => {
   try {
       let filter = {};
       if (req.query.categories) {
           filter = { category: req.query.categories.split(',') };
       }
-
-      const productList = await Product.find(filter).populate('category');
-
+      if (req.query.users) {
+        filter = { ...filter, user: req.query.users.split(',') };
+    }
+    const productList = await Product.find(filter)
+    .populate({
+      path: 'category',
+      select: '-icon',
+    }).populate({
+      path: 'user',
+      select: '-passwordHash -image', // Loại bỏ các trường không mong muốn
+    });
       if (!productList || productList.length === 0) {
           return res.status(404).json({ success: false, message: 'No products found' });
       }
@@ -62,26 +72,26 @@ router.get(`/`, async (req, res) => {
               id: product.id,
               name: product.name,
               description: product.description,
-              image: product.image ? `/pbl6/products/image/${product.id}` : null, // Đường dẫn đến route mới
-              images: product.images.map(image => `/pbl6/products//gallery/${product.id}/images/${image.id}`),
-              brand: product.brand,
+              image: product.image ? `/pbl6/product/image/${product.id}` : null, // Đường dẫn đến route mới
+              images: product.images.map(image => `/pbl6/product//gallery/${product.id}/images/${image.id}`),
               price: product.price,
-              category: product.category,
               rating: product.rating,
               numRated: product.numRated,
               isFeatured: product.isFeatured,
+              user: product.user,
+              category: product.category,
           };
       });
 
       res.send(formattedProductList);
   } catch (error) {
-      res.status(500).json({ success: false, message: 'An error occurred while processing your request' });
+      res.status(500).json({ success: false, message: error.message });
   }
 });
   
 router.get(`/:id`, async (req, res) => {
   try {
-      const product = await Product.findById(req.params.id).populate('category');
+      const product = await Product.findById(req.params.id).populate('category').populate('user');
 
       if (!product) {
           return res.status(404).json({ success: false, message: 'Product not found' });
@@ -90,16 +100,16 @@ router.get(`/:id`, async (req, res) => {
       // Lấy định dạng hình ảnh từ trường image của sản phẩm
       const formattedProduct = {
           id: product.id,
-          name: product.name,
+          name: product.name, 
           description: product.description,
-          image: product.image ? `/pbl6/products/image/${product.id}` : null, // Đường dẫn đến route mới
-          images: product.images.map(image => `/pbl6/products//gallery/${product.id}/images/${image.id}`),
-          brand: product.brand,
+          image: product.image ? `/pbl6/product/image/${product.id}` : null, // Đường dẫn đến route mới
+          images: product.images.map(image => `/pbl6/product//gallery/${product.id}/images/${image.id}`),
           price: product.price,
-          category: product.category,
           rating: product.rating,
           numRated: product.numRated,
           isFeatured: product.isFeatured,
+          user: product.user,
+          category: product.category,
       };
 
       res.send(formattedProduct);
@@ -109,34 +119,76 @@ router.get(`/:id`, async (req, res) => {
   }
 });
 
+// router.post(`/`, uploadOptions.single('image'), async (req, res) => {
+//   try {
+//       const category = await Category.findById(req.body.category);
+//       if (!category) return res.status(400).send('Invalid Category');
+
+//       const file = req.file;
+//       if (!file) return res.status(400).send('No image in the request');
+
+//       const isValid = FILE_TYPE_MAP[file.mimetype];
+//       if (!isValid) {
+//           return res.status(400).send('Invalid image type');
+//       }
+
+//       const image = {
+//           data: file.buffer, // Sử dụng dữ liệu buffer thay vì đọc từ đĩa
+//           contentType: file.mimetype
+//       };
+
+//       const product = new Product({
+//           name: req.body.name,
+//           description: req.body.description,
+//           image: image,
+//           user: req.body.user,
+//           price: req.body.price,
+//           category: req.body.category,
+//           numRated: req.body.numRated,
+//           isFeatured: req.body.isFeatured,
+//       });
+
+//       await product.save();
+
+//       res.send("added product");
+//   } catch (error) {
+//       console.error('Error creating product:', error);
+//       res.status(500).send('Internal Server Error');
+//   }
+// });
 router.post(`/`, uploadOptions.single('image'), async (req, res) => {
   try {
       const category = await Category.findById(req.body.category);
       if (!category) return res.status(400).send('Invalid Category');
+      const user = await User.findById(req.body.user);
+        if (!user) {
+            return res.status(400).send('Invalid User');
+        }
 
-      const file = req.file;
-      if (!file) return res.status(400).send('No image in the request');
-
-      const isValid = FILE_TYPE_MAP[file.mimetype];
-      if (!isValid) {
-          return res.status(400).send('Invalid image type');
-      }
-
-      const image = {
-          data: file.buffer, // Sử dụng dữ liệu buffer thay vì đọc từ đĩa
-          contentType: file.mimetype
-      };
-
-      const product = new Product({
+      let productData = {
           name: req.body.name,
           description: req.body.description,
-          image: image,
-          brand: req.body.brand,
+          user: req.body.user,
           price: req.body.price,
           category: req.body.category,
           numRated: req.body.numRated,
           isFeatured: req.body.isFeatured,
-      });
+      };
+
+      if (req.file) {
+          // Nếu có file ảnh được gửi lên
+          const isValid = FILE_TYPE_MAP[req.file.mimetype];
+          if (!isValid) {
+              return res.status(400).send('Invalid image type');
+          }
+
+          productData.image = {
+              data: req.file.buffer,
+              contentType: req.file.mimetype
+          };
+      }
+
+      const product = new Product(productData);
 
       await product.save();
 
@@ -158,6 +210,10 @@ router.put('/:id', async (req, res) => {
       if (!category) {
         return res.status(400).send('Invalid Category');
       }
+      const user = await User.findById(req.body.user);
+        if (!user) {
+            return res.status(400).send('Invalid User');
+        }
   
       const product = await Product.findByIdAndUpdate(
         req.params.id,
@@ -165,7 +221,7 @@ router.put('/:id', async (req, res) => {
           name: req.body.name,
           description: req.body.description,
           image: req.body.image,
-          brand: req.body.brand,
+          user: req.body.user,
           price: req.body.price,
           category: req.body.category,
           rating: req.body.rating,
