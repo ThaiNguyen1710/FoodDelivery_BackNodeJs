@@ -48,12 +48,12 @@ router.get(`/`, async (req, res) => {
         req.params.id,
         {
           name: req.body.name,
-          email: req.body.email,
           phone: req.body.phone,
           address:req.body.address,
           passwordHash: newPassword,
           description: req.body.description,
-          isAdmin: req.body.isAdmin,
+          image:req.body.image,
+          isFeatured:req.body.isFeatured
         },
         { new: true }
       );
@@ -62,7 +62,7 @@ router.get(`/`, async (req, res) => {
         return res.status(400).send('The shipper cannot be created!');
       }
   
-      res.send("shipper updated");
+      res.send(shipper);
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
     }
@@ -112,8 +112,8 @@ router.get(`/`, async (req, res) => {
         address: req.body.address,
         passwordHash: bcrypt.hashSync(req.body.password, 10),
         description: req.body.description,
-        isAdmin: req.body.isAdmin,
-        image: req.body.image
+        image:req.body.image,
+        isFeatured:req.body.isFeatured
       });
   
       shipper = await shipper.save();

@@ -2,32 +2,64 @@ const {Order} = require('../models/order');
 const express = require('express');
 const { OrderList } = require('../models/order-list');
 const { User } = require('../models/user');
+const { Shipper } = require('../models/shipper');
 const { OrderItem } = require('../models/order-item');
 const router = express.Router();
 
 
-router.get(`/`, async (req, res) =>{
-    const orderList = await Order.find().populate('user', 'name').sort({'dateOrdered': -1});
+router.get(`/`, async (req, res) => {
+    let filter = {};
 
-    if(!orderList) {
-        res.status(500).json({success: false})
-    } 
-    res.send(orderList);
-})
+    if (req.query.shippers) {
+        filter.shipper = { $in: req.query.shippers.split(',') };
+    }
 
-router.get(`/:id`, async (req, res) =>{
-    const order = await Order.findById(req.params.id)
-    .populate('user', 'name')
-    .populate({ 
-        path: 'orderLists', populate: {
-            path : 'product', populate: 'category'} 
-        });
+    if (req.query.users) {
+        filter.user = { $in: req.query.users.split(',') };
+    }
 
-    if(!order) {
-        res.status(500).json({success: false})
-    } 
-    res.send(order);
-})
+    try {
+        const orderList = await Order.find(filter).populate('user', 'name').sort({ 'dateOrdered': -1 });
+
+        if (!orderList || orderList.length === 0) {
+            return res.status(404).json({ success: false, message: 'No orders found' });
+        }
+
+        res.send(orderList);
+    } catch (error) {
+        console.error("Error fetching orders:", error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
+
+router.get(`/:id`, async (req, res) => {
+    try {
+        const order = await Order.findById(req.params.id)
+            .populate('user', 'name')
+            .populate({
+                path: 'orderLists',
+                populate: {
+                    path: 'product',
+                    select: '-image',  
+                    populate: {
+                        path: 'category',
+                        select: '-icon'  
+                    }
+                }
+            });
+
+        if (!order) {
+            return res.status(500).json({ success: false });
+        }
+
+        res.send(order);
+    } catch (error) {
+        console.error("Error fetching order:", error);
+        res.status(500).send('Internal Server Error');
+    }
+});
+
 
 // router.post('/', async (req, res) => {
 //     try {
@@ -181,100 +213,34 @@ router.post('/', async (req, res) => {
     }
 });
 
-// router.post('/', async (req, res) => {
-//     try {
-//         const user = await User.findById(req.body.user);
-//         if (!user) {
-//             return res.status(400).send('Invalid User');
-//         }
+router.put('/:id', async (req, res) => {
+    try {
+        // Kiểm tra xem shipper có tồn tại hay không
+        const existingShipper = await Shipper.findById(req.body.shipper);
+        if (!existingShipper) {
+            return res.status(400).send('Invalid Shipper');
+        }
 
-//         const orderItems = await OrderItem.find({ user: req.body.user,product:req.body.product });
+        // Cập nhật order
+        const order = await Order.findByIdAndUpdate(
+            req.params.id,
+            {
+                status: req.body.status,
+                shipper: req.body.shipper
+            },
+            { new: true }
+        );
 
-//         const orderLists = await Promise.all(req.body.orderLists.map(async (orderList) => {
-//             try {
-//                 const matchingOrderItems = orderItems.filter(item => item.product == orderList.product);
+        if (!order) {
+            return res.status(400).send('The order cannot be updated!');
+        }
 
-//                 if (matchingOrderItems.length > 0) {
-//                     const newOrderLists = await Promise.all(matchingOrderItems.map(async (matchingOrderItem) => {
-//                         let newOrderList = new OrderList({
-//                             quantity: matchingOrderItem.quantity,
-//                             product: matchingOrderItem.product
-//                         });
-
-//                         newOrderList = await newOrderList.save();
-
-//                         return newOrderList._id;
-//                     }));
-
-//                     return newOrderLists;
-//                 } else {
-//                     console.error("OrderItem not found for user:", req.body.user, "and product:", orderList.product);
-//                     return null;
-//                 }
-//             } catch (error) {
-//                 console.error("Error creating order Lists:", error);
-//                 throw error;
-//             }
-//         }));
-
-//         const flatOrderLists = [].concat(...orderLists);
-//         const validOrderLists = flatOrderLists.filter(orderListId => orderListId !== null);
-
-//         const totalPrices = await Promise.all(validOrderLists.map(async (orderListId) => {
-//             try {
-//                 const orderList = await OrderList.findById(orderListId).populate('product', 'price');
-//                 const totalPrice = orderList.product.price * orderList.quantity;
-//                 return totalPrice;
-//             } catch (error) {
-//                 console.error("Error fetching order List:", error);
-//                 throw error;
-//             }
-//         }));
-
-//         const totalPrice = totalPrices.reduce((a, b) => a + b, 0);
-
-//         let order = new Order({
-//             orderLists: validOrderLists,
-//             shippingAddress1: req.body.shippingAddress1,
-//             shippingAddress2: req.body.shippingAddress2,
-//             city: req.body.city,
-//             zip: req.body.zip,
-//             country: req.body.country,
-//             phone: req.body.phone,
-//             status: req.body.status,
-//             totalPrice: totalPrice,
-//             user: req.body.user,
-//         });
-
-//         order = await order.save();
-
-//         if (!order) {
-//             return res.status(400).send('The order cannot be created!');
-//         }
-
-//         res.send(order);
-
-//     } catch (error) {
-//         console.error("Error creating order:", error);
-//         res.status(500).send(error.message);
-//     }
-// });
-// ////////////////
-
-router.put('/:id',async (req, res)=> {
-    const order = await Order.findByIdAndUpdate(
-        req.params.id,
-        {
-            status: req.body.status
-        },
-        { new: true}
-    )
-
-    if(!order)
-    return res.status(400).send('the order cannot be update!')
-
-    res.send(order);
-})
+        res.send(order);
+    } catch (error) {
+        console.error("Error updating order:", error);
+        res.status(500).send('Internal Server Error');
+    }
+});
 
 
 router.delete('/:id', (req, res)=>{

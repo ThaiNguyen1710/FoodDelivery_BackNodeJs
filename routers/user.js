@@ -48,7 +48,6 @@ router.get(`/`, async (req, res) => {
         req.params.id,
         {
           name: req.body.name,
-          email: req.body.email,
           phone: req.body.phone,
           address:req.body.address,
           passwordHash: newPassword,

@@ -15,6 +15,7 @@ const shipperSchema = new mongoose.Schema({
     },
     address:{
         type: String,
+        default: null
     },
     passwordHash: {
         type: String,
@@ -22,14 +23,16 @@ const shipperSchema = new mongoose.Schema({
     },
     description:{
         type: String,
-    },
-    isAdmin: {
-        type: Boolean,
-        default: false,
+        default: null
     },
     image:{
         type: String,
-    }
+        default: null
+    },
+    isFeatured: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 shipperSchema.virtual('id').get(function () {

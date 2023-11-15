@@ -42,6 +42,11 @@ const orderSchema = mongoose.Schema({
         ref: 'User',
         required:true
     },
+    shipper: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Shipper',
+        default: null  // Giá trị mặc định khi shipper trống
+    },
     dateOrdered: {
         type: Date,
         default: Date.now,
