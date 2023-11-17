@@ -39,53 +39,42 @@ router.get(`/`, async (req, res) => {
     }
 });
 
-router.get(`/123`, async (req, res) =>{
-    res.send("hello")
-})
 router.get('/:id', async (req, res) => {
-    try {
-      const orderItem = await OrderItem.findById(req.params.id);
-  
+  try {
+      // let filter = {};
+      // // Nếu có truy vấn products hoặc users, thêm chúng vào filter
+      // if (req.query.products) {
+      //     filter = { ...filter, product: req.query.products.split(',') };
+      // }
+
+      // if (req.query.users) {
+      //     filter = { ...filter, user: req.query.users.split(',') };
+      // }
+
+      // // Thêm ID vào filter để lấy orderItem cụ thể
+      // filter = { ...filter, _id: req.params.id };
+
+      const orderItem = await OrderItem.findOne()
+          .populate({
+              path: 'product',
+              select: '-image',
+          })
+          .populate({
+              path: 'user',
+              select: '-passwordHash -image',
+          });
+
       if (!orderItem) {
-        res.status(404).json({ message: 'The orderItem with the given ID was not found.' });
+          res.status(404).json({ message: 'The orderItem with the given ID was not found.' });
       } else {
-        res.status(200).send(orderItem);
+          res.status(200).send(orderItem);
       }
-    } catch (error) {
-      // Xử lý lỗi nếu có
+  } catch (error) {
+      console.error('Error fetching orderItem by ID:', error);
       res.status(500).json({ message: 'An error occurred while processing your request.' });
-    }
-  });
-  
-//   router.post('/', async (req, res) => {
-//     try {
-//       const product = await Product.findById(req.body.product);
-//       if (!product) {
-//         return res.status(400).send('Invalid product');
-//       }
-  
-//       const user = await User.findById(req.body.user);
-//       if (!user) {
-//         return res.status(400).send('Invalid User');
-//       }
-  
-//       let orderItem = new OrderItem({
-//         product: req.body.product,
-//         quantity: req.body.quantity,
-//         user: req.body.user,
-//       });
-  
-//       orderItem = await orderItem.save();
-  
-//       if (!orderItem) {
-//         return res.status(400).send('The orderItem cannot be created!');
-//       }
-  
-//       res.send(orderItem);
-//     } catch (error) {
-//       res.status(500).json({ success: false, error: error.message });
-//     }
-//   });
+  }
+});
+
 router.post('/', async (req, res) => {
     try {
       const product = await Product.findById(req.body.product);
@@ -128,21 +117,54 @@ router.post('/', async (req, res) => {
   });
   
 
-router.put('/:id',async (req, res)=> {
-    const orderItem = await OrderItem.findByIdAndUpdate(
-        req.params.id,
-        {
-            name: req.body.name,
-            icon: req.body.icon || orderItem.icon
-        },
-        { new: true}
-    )
+  router.put('/asc/:id', async (req, res) => {
+    try {
+        const orderItemToUpdate = await OrderItem.findById(req.params.id);
 
-    if(!orderItem)
-    return res.status(400).send('the orderItem cannot be created!')
+        if (!orderItemToUpdate) {
+            return res.status(404).json({ message: 'The orderItem with the given ID was not found.' });
+        }
+        if (orderItemToUpdate.quantity < 40) {
+            orderItemToUpdate.quantity += 1;
 
-    res.send(orderItem);
-})
+            // Lưu thay đổi vào cơ sở dữ liệu
+            const updatedOrderItem = await orderItemToUpdate.save();
+
+            return res.status(200).send(updatedOrderItem);
+        } else {
+            return res.status(400).json({ message: 'Quantity cannot be less than 0.' });
+        }
+    } catch (error) {
+        console.error('Error updating orderItem:', error);
+        res.status(500).json({ message: 'An error occurred while processing your request.' });
+    }
+});
+
+
+router.put('/desc/:id', async (req, res) => {
+  try {
+      const orderItemToUpdate = await OrderItem.findById(req.params.id);
+
+      if (!orderItemToUpdate) {
+          return res.status(404).json({ message: 'The orderItem with the given ID was not found.' });
+      }
+
+      // Đảm bảo quantity không nhỏ hơn 0
+      if (orderItemToUpdate.quantity > 0) {
+          orderItemToUpdate.quantity -= 1;
+
+          // Lưu thay đổi vào cơ sở dữ liệu
+          const updatedOrderItem = await orderItemToUpdate.save();
+
+          return res.status(200).send(updatedOrderItem);
+      } else {
+          return res.status(400).json({ message: 'Quantity cannot be less than 0.' });
+      }
+  } catch (error) {
+      console.error('Error updating orderItem:', error);
+      res.status(500).json({ message: 'An error occurred while processing your request.' });
+  }
+});
 
 router.delete('/:id', (req, res)=>{
     OrderItem.findByIdAndRemove(req.params.id).then(orderItem =>{
@@ -155,16 +177,8 @@ router.delete('/:id', (req, res)=>{
        return res.status(500).json({success: false, error: err}) 
     })
 })
-// router.get(`/get/count`, async (req, res) => {
-//     const orderItemCount = await OrderItem.countDocuments();
-
-//     if (!orderItemCount) {
-//         res.status(500).json({ success: false });
-//     }
-//     res.send({
-//         orderItemCount: orderItemCount
-//     });
-// })
+// http://localhost:8080/pbl6/orderItem/get/count?products=6553cc59c46a1274e138d6d4
+// http://localhost:8080/pbl6/orderItem/get/count?users=6553b71403d45d46c46a9624
 router.get(`/get/count`, async (req, res) => {
     try {
         let filter = {};

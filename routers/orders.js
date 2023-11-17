@@ -19,7 +19,7 @@ router.get(`/`, async (req, res) => {
     }
 
     try {
-        const orderList = await Order.find(filter).populate('user', 'name').sort({ 'dateOrdered': -1 });
+        const orderList = await Order.find(filter).populate('user', 'email name').sort({ 'dateOrdered': -1 });
 
         if (!orderList || orderList.length === 0) {
             return res.status(404).json({ success: false, message: 'No orders found' });
@@ -36,18 +36,23 @@ router.get(`/`, async (req, res) => {
 router.get(`/:id`, async (req, res) => {
     try {
         const order = await Order.findById(req.params.id)
-            .populate('user', 'name')
+            .populate({
+                path:'user',
+                select:'email name'})
             .populate({
                 path: 'orderLists',
                 populate: {
                     path: 'product',
-                    select: '-image',  
+                    select: 'name price',  
                     populate: {
                         path: 'category',
                         select: '-icon'  
                     }
                 }
-            });
+            }).populate({
+                path:'shipper',
+                select:'-image -passwordHash'           
+        });
 
         if (!order) {
             return res.status(500).json({ success: false });
@@ -59,8 +64,6 @@ router.get(`/:id`, async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
-
-
 // router.post('/', async (req, res) => {
 //     try {
 //         const user = await User.findById(req.body.user);
@@ -122,59 +125,145 @@ router.get(`/:id`, async (req, res) => {
 //         res.status(500).send('Internal Server Error');
 //     }
 // });
+// router.post('/', async (req, res) => {
+//     try {
+//         const user = await User.findById(req.body.user);
+//         if (!user) {
+//             return res.status(400).send('Invalid User');
+//         }
+
+//         const orderLists = await Promise.all(req.body.orderLists.map(async (orderList) => {
+//             try {
+//                 // Kiểm tra xem user có tồn tại trong orderItem hay không
+//                 const orderItem = await OrderItem.findOne({ user: req.body.user });
+
+//                 // Nếu orderItem tồn tại, thì lưu thông tin vào orderList
+//                 if (orderItem) {
+//                     orderList.quantity = orderItem.quantity;
+//                     orderList.product = orderItem.product;
+
+//                     // Tạo mới orderList và lưu vào cơ sở dữ liệu
+//                     let newOrderList = new OrderList({
+//                         quantity: orderList.quantity,
+//                         product: orderList.product
+//                     });
+
+//                     newOrderList = await newOrderList.save();
+
+//                     return newOrderList._id;
+//                 } else {
+//                     console.error("OrderItem not found for user:", req.body.user, "and product:", orderList.product);
+//                     // Xử lý tùy thuộc vào logic của bạn khi không tìm thấy orderItem
+//                     return null; // hoặc throw một lỗi để sử lý ở catch block
+//                 }
+//             } catch (error) {
+//                 console.error("Error creating order List:", error);
+//                 throw error;
+//             }
+//         }));
+
+//         // Loại bỏ các giá trị null từ mảng orderLists
+//         const validOrderLists = orderLists.filter(orderListId => orderListId !== null);
+
+//         // Kiểm tra xem có orderList hợp lệ nào không
+//         if (validOrderLists.length === 0) {
+//             return res.status(400).send('No valid orderLists found');
+//         }
+
+//         // Tính tổng giá trị của orderLists
+//         const totalPrices = await Promise.all(validOrderLists.map(async (orderListId) => {
+//             try {
+//                 const orderList = await OrderList.findById(orderListId).populate('product', 'price');
+//                 const totalPrice = orderList.product.price * orderList.quantity;
+//                 return totalPrice;
+//             } catch (error) {
+//                 console.error("Error fetching order List:", error);
+//                 throw error;
+//             }
+//         }));
+
+//         // Tính tổng giá trị của đơn hàng
+//         const totalPrice = totalPrices.reduce((a, b) => a + b, 0);
+
+//         // Tạo mới đơn hàng
+//         let order = new Order({
+//             orderLists: validOrderLists,
+//             shippingAddress1: req.body.shippingAddress1,
+//             shippingAddress2: req.body.shippingAddress2,
+//             city: req.body.city,
+//             zip: req.body.zip,
+//             country: req.body.country,
+//             phone: req.body.phone,
+//             status: req.body.status,
+//             totalPrice: totalPrice,
+//             user: req.body.user,
+//         });
+
+//         // Lưu đơn hàng vào cơ sở dữ liệu
+//         order = await order.save();
+
+//         // Kiểm tra xem đơn hàng có được lưu thành công hay không
+//         if (!order) {
+//             return res.status(400).send('The order cannot be created!');
+//         }
+
+//         // Trả về đơn hàng đã tạo
+//         res.send(order);
+
+//     } catch (error) {
+//         console.error("Error creating order:", error);
+//         res.status(500).send(error.message);
+//     }
+// });
+////////////////////
 router.post('/', async (req, res) => {
     try {
+        // Kiểm tra xem user có tồn tại hay không
         const user = await User.findById(req.body.user);
         if (!user) {
             return res.status(400).send('Invalid User');
         }
 
-        const orderLists = await Promise.all(req.body.orderLists.map(async (orderList) => {
+        // Tìm tất cả các OrderItem có user có id trùng với req.body.user
+        const orderItems = await OrderItem.find({ user: req.body.user });
+
+        // Kiểm tra xem có OrderItem nào tồn tại không
+        if (!orderItems || orderItems.length === 0) {
+            return res.status(400).send('No OrderItems found for the user');
+        }
+
+        // Tạo một mảng orderLists từ orderItems
+        const orderLists = await Promise.all(orderItems.map(async (orderItem) => {
             try {
-                // Kiểm tra xem user có tồn tại trong orderItem hay không
-                const orderItem = await OrderItem.findOne({ user: req.body.user });
+                // Tạo mới OrderList từ thông tin OrderItem
+                let newOrderList = new OrderList({
+                    quantity: orderItem.quantity,
+                    product: orderItem.product,
+                });
 
-                // Nếu orderItem tồn tại, thì lưu thông tin vào orderList
-                if (orderItem) {
-                    orderList.quantity = orderItem.quantity;
-                    orderList.product = orderItem.product;
+                // Lưu OrderList vào cơ sở dữ liệu
+                newOrderList = await newOrderList.save();
 
-                    // Tạo mới orderList và lưu vào cơ sở dữ liệu
-                    let newOrderList = new OrderList({
-                        quantity: orderList.quantity,
-                        product: orderList.product
-                    });
-
-                    newOrderList = await newOrderList.save();
-
-                    return newOrderList._id;
-                } else {
-                    console.error("OrderItem not found for user:", req.body.user, "and product:", orderList.product);
-                    // Xử lý tùy thuộc vào logic của bạn khi không tìm thấy orderItem
-                    return null; // hoặc throw một lỗi để sử lý ở catch block
-                }
+                return newOrderList._id; // Trả về ID của OrderList vừa tạo
             } catch (error) {
-                console.error("Error creating order List:", error);
+                console.error("Error creating OrderList:", error);
                 throw error;
             }
         }));
 
-        // Loại bỏ các giá trị null từ mảng orderLists
-        const validOrderLists = orderLists.filter(orderListId => orderListId !== null);
-
-        // Kiểm tra xem có orderList hợp lệ nào không
-        if (validOrderLists.length === 0) {
-            return res.status(400).send('No valid orderLists found');
+        // Kiểm tra xem có OrderList hợp lệ nào không
+        if (orderLists.length === 0) {
+            return res.status(400).send('No valid OrderLists found');
         }
 
         // Tính tổng giá trị của orderLists
-        const totalPrices = await Promise.all(validOrderLists.map(async (orderListId) => {
+        const totalPrices = await Promise.all(orderLists.map(async (orderListId) => {
             try {
                 const orderList = await OrderList.findById(orderListId).populate('product', 'price');
                 const totalPrice = orderList.product.price * orderList.quantity;
                 return totalPrice;
             } catch (error) {
-                console.error("Error fetching order List:", error);
+                console.error("Error fetching OrderList:", error);
                 throw error;
             }
         }));
@@ -184,7 +273,7 @@ router.post('/', async (req, res) => {
 
         // Tạo mới đơn hàng
         let order = new Order({
-            orderLists: validOrderLists,
+            orderLists: orderLists,
             shippingAddress1: req.body.shippingAddress1,
             shippingAddress2: req.body.shippingAddress2,
             city: req.body.city,
@@ -235,7 +324,7 @@ router.put('/:id', async (req, res) => {
             return res.status(400).send('The order cannot be updated!');
         }
 
-        res.send(order);
+        res.send('The order updated!');
     } catch (error) {
         console.error("Error updating order:", error);
         res.status(500).send('Internal Server Error');
@@ -270,16 +359,6 @@ router.get('/get/totalsales', async (req, res)=> {
     res.send({totalsales: totalSales.pop().totalsales})
 })
 
-router.get(`/get/count`, async (req, res) => {
-    const orderCount = await Order.countDocuments();
-
-    if (!orderCount) {
-        res.status(500).json({ success: false });
-    }
-    res.send({
-        orderCount: orderCount
-    });
-})
 
 
 router.get(`/get/userorders/:userid`, async (req, res) =>{
@@ -293,6 +372,22 @@ router.get(`/get/userorders/:userid`, async (req, res) =>{
     } 
     res.send(userOrderList);
 })
+router.get('/get/count', async (req, res) => {
+    try {
+        const orderCount = await Order.countDocuments();
+
+        if (!orderCount) {
+            return res.status(500).json({ success: false });
+        }
+
+        res.send({
+            orderCount: orderCount
+        });
+    } catch (error) {
+        console.error("Error fetching order count:", error);
+        res.status(500).send('Internal Server Error');
+    }
+});
 
 
 

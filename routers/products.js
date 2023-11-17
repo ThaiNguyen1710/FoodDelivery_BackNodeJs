@@ -58,10 +58,10 @@ router.get(`/`, async (req, res) => {
     const productList = await Product.find(filter)
     .populate({
       path: 'category',
-      select: '-icon',
+      select: 'name',
     }).populate({
       path: 'user',
-      select: '-passwordHash -image', // Loại bỏ các trường không mong muốn
+      select: 'name openAt closeAt', // Loại bỏ các trường không mong muốn
     });
       if (!productList || productList.length === 0) {
           return res.status(404).json({ success: false, message: 'No products found' });
@@ -88,7 +88,100 @@ router.get(`/`, async (req, res) => {
       res.status(500).json({ success: false, message: error.message });
   }
 });
-  
+router.get(`/isT`, async (req, res) => {
+  try {
+      let filter = {};
+      if (req.query.categories) {
+          filter = { category: req.query.categories.split(',') };
+      }
+      if (req.query.users) {
+          filter = { ...filter, user: req.query.users.split(',') };
+      }
+
+      // Thêm điều kiện chỉ lấy sản phẩm khi isFeatured là true
+      filter.isFeatured = true;
+
+      const productList = await Product.find(filter)
+        .populate({
+          path: 'category',
+          select: 'name',
+        }).populate({
+          path: 'user',
+          select: 'name openAt closeAt', // Loại bỏ các trường không mong muốn
+        });
+
+      if (!productList || productList.length === 0) {
+          return res.status(404).json({ success: false, message: 'No featured products found' });
+      }
+
+      const formattedProductList = productList.map(product => {
+          return {
+              id: product.id,
+              name: product.name,
+              description: product.description,
+              image: product.image ? `/pbl6/product/image/${product.id}` : null,
+              images: product.images.map(image => `/pbl6/product/gallery/${product.id}/images/${image.id}`),
+              price: product.price,
+              rating: product.rating,
+              numRated: product.numRated,
+              isFeatured: product.isFeatured,
+              user: product.user,
+              category: product.category,
+          };
+      });
+
+      res.send(formattedProductList);
+  } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+  }
+});
+router.get(`/isF`, async (req, res) => {
+  try {
+      let filter = {};
+      if (req.query.categories) {
+          filter = { category: req.query.categories.split(',') };
+      }
+      if (req.query.users) {
+          filter = { ...filter, user: req.query.users.split(',') };
+      }
+
+      // Thêm điều kiện chỉ lấy sản phẩm khi isFeatured là true
+      filter.isFeatured = false;
+
+      const productList = await Product.find(filter)
+        .populate({
+          path: 'category',
+          select: 'name',
+        }).populate({
+          path: 'user',
+          select: 'name openAt closeAt', // Loại bỏ các trường không mong muốn
+        });
+
+      if (!productList || productList.length === 0) {
+          return res.status(404).json({ success: false, message: 'No featured products found' });
+      }
+
+      const formattedProductList = productList.map(product => {
+          return {
+              id: product.id,
+              name: product.name,
+              description: product.description,
+              image: product.image ? `/pbl6/product/image/${product.id}` : null,
+              images: product.images.map(image => `/pbl6/product/gallery/${product.id}/images/${image.id}`),
+              price: product.price,
+              rating: product.rating,
+              numRated: product.numRated,
+              isFeatured: product.isFeatured,
+              user: product.user,
+              category: product.category,
+          };
+      });
+
+      res.send(formattedProductList);
+  } catch (error) {
+      res.status(500).json({ success: false, message: error.message });
+  }
+});
 router.get(`/:id`, async (req, res) => {
   try {
       const product = await Product.findById(req.params.id).populate('category').populate('user');
@@ -206,14 +299,14 @@ router.put('/:id', async (req, res) => {
         return res.status(400).send('Invalid Product Id');
       }
   
-      const category = await Category.findById(req.body.category);
-      if (!category) {
-        return res.status(400).send('Invalid Category');
-      }
-      const user = await User.findById(req.body.user);
-        if (!user) {
-            return res.status(400).send('Invalid User');
-        }
+      // const category = await Category.findById(req.body.category);
+      // if (!category) {
+      //   return res.status(400).send('Invalid Category');
+      // }
+      // const user = await User.findById(req.body.user);
+      //   if (!user) {
+      //       return res.status(400).send('Invalid User');
+      //   }
   
       const product = await Product.findByIdAndUpdate(
         req.params.id,
@@ -221,9 +314,7 @@ router.put('/:id', async (req, res) => {
           name: req.body.name,
           description: req.body.description,
           image: req.body.image,
-          user: req.body.user,
           price: req.body.price,
-          category: req.body.category,
           rating: req.body.rating,
           numRated: req.body.numRated,
           isFeatured: req.body.isFeatured,
