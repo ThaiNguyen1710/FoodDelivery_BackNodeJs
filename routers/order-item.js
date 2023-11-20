@@ -150,7 +150,7 @@ router.put('/desc/:id', async (req, res) => {
       }
 
       // Đảm bảo quantity không nhỏ hơn 0
-      if (orderItemToUpdate.quantity > 0) {
+      if (orderItemToUpdate.quantity > 1) {
           orderItemToUpdate.quantity -= 1;
 
           // Lưu thay đổi vào cơ sở dữ liệu

@@ -3,7 +3,11 @@ const mongoose = require('mongoose');
 const ratedSchema = mongoose.Schema({
     quantity: {
         type: Number,
-        default:0
+        default:1
+    },
+    comment:{
+        type:String,
+        required: true,
     },
     product: {
         type: mongoose.Schema.Types.ObjectId,
