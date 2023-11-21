@@ -17,7 +17,38 @@ router.get(`/`, async (req, res) => {
       res.status(500).json({ success: false, error: error.message });
     }
   });
+  router.get(`/isT`, async (req, res) => {
+    let filter = {};
+    // Thêm điều kiện chỉ lấy sản phẩm khi isFeatured là true
+    filter.isFeatured = true;
+    try {
+      const shipperList = await Shipper.find(filter).select('-passwordHash');
   
+      if (!shipperList) {
+        return res.status(500).json({ success: false, error: 'Error fetching shipper list.' });
+      }
+      
+      res.send(shipperList);
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
+  router.get(`/isF`, async (req, res) => {
+    let filter = {};
+    // Thêm điều kiện chỉ lấy shipper khi isFeatured là false
+    filter.isFeatured = false;
+    try {
+      const shipperList = await Shipper.find(filter).select('-passwordHash');
+  
+      if (!shipperList) {
+        return res.status(500).json({ success: false, error: 'Error fetching shipper list.' });
+      }
+      
+      res.send(shipperList);
+    } catch (error) {
+      res.status(500).json({ success: false, error: error.message });
+    }
+  });
   router.get('/:id', async (req, res) => {
     try {
       const shipper = await Shipper.findById(req.params.id).select('-passwordHash');

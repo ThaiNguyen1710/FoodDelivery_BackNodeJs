@@ -158,47 +158,47 @@ router.get('/:id', async (req, res) => {
 //     res.send(rated);
 // })
 
-router.put('/:id', async (req, res) => {
-    try {
-        const product = await Product.findById(req.body.product);
+// router.put('/:id', async (req, res) => {
+//     try {
+//         const product = await Product.findById(req.body.product);
 
-        if (!product) {
-            return res.status(400).send('Invalid product');
-        }
+//         if (!product) {
+//             return res.status(400).send('Invalid product');
+//         }
 
-        const rated = await Rated.findByIdAndUpdate(
-            req.params.id,
-            {
-                quantity: req.body.quantity,
-                comment: req.body.comment,
-            },
-            { new: true }
-        );
+//         const rated = await Rated.findByIdAndUpdate(
+//             req.params.id,
+//             {
+//                 quantity: req.body.quantity,
+//                 comment: req.body.comment,
+//             },
+//             { new: true }
+//         );
 
-        if (!rated) {
-            return res.status(400).send('The rated cannot be updated!');
-        }
+//         if (!rated) {
+//             return res.status(400).send('The rated cannot be updated!');
+//         }
 
-       else{
-         // Lấy giá trị cũ của quantity nếu có
-         const oldQuantity = rated.quantity || 0;
+//        else{
+//          // Lấy giá trị cũ của quantity nếu có
+//          const oldQuantity = rated.quantity || 0;
 
-         // Cập nhật trường numRated và ratings trong product
-         product.ratings = (Number(product.numRated) * Number(product.ratings) + 
-         Number(req.body.quantity) - Number(oldQuantity)) / Number(product.numRated);
+//          // Cập nhật trường numRated và ratings trong product
+//          product.ratings = (Number(product.numRated) * Number(product.ratings) + 
+//          Number(req.body.quantity) - Number(oldQuantity)) / Number(product.numRated);
  
-         console.log('Before save:', product.numRated, product.ratings);
+//          console.log('Before save:', product.numRated, product.ratings);
  
-         await product.save();
+//          await product.save();
  
-         console.log('After save:', product.numRated, product.ratings);
+//          console.log('After save:', product.numRated, product.ratings);
  
-         res.send(rated);
-       }
-    } catch (error) {
-        res.status(500).json({ success: false, error: error.message });
-    }
-});
+//          res.send(rated);
+//        }
+//     } catch (error) {
+//         res.status(500).json({ success: false, error: error.message });
+//     }
+// });
 
 
 // router.put('/:id', async (req, res) => {
@@ -231,26 +231,16 @@ router.put('/:id', async (req, res) => {
 //   res.send(rated);
 // });
 
-router.delete('/:id', (req, res)=>{
-    Rated.findByIdAndRemove(req.params.id).then(rated =>{
-        if(rated) {
-            return res.status(200).json({success: true, message: 'the rated is deleted!'})
-        } else {
-            return res.status(404).json({success: false , message: "rated not found!"})
-        }
-    }).catch(err=>{
-       return res.status(500).json({success: false, error: err}) 
-    })
-})
-// router.get(`/get/count`, async (req, res) => {
-//     const ratedCount = await rated.countDocuments();
-
-//     if (!ratedCount) {
-//         res.status(500).json({ success: false });
-//     }
-//     res.send({
-//         ratedCount: ratedCount
-//     });
+// router.delete('/:id', (req, res)=>{
+//     Rated.findByIdAndRemove(req.params.id).then(rated =>{
+//         if(rated) {
+//             return res.status(200).json({success: true, message: 'the rated is deleted!'})
+//         } else {
+//             return res.status(404).json({success: false , message: "rated not found!"})
+//         }
+//     }).catch(err=>{
+//        return res.status(500).json({success: false, error: err}) 
+//     })
 // })
 router.get(`/get/count`, async (req, res) => {
     try {

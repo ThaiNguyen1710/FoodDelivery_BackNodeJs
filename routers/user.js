@@ -84,13 +84,15 @@ router.get(`/`, async (req, res) => {
         const token = jwt.sign(
           {
             userId: user.id,
-            isAdmin: user.isAdmin
+            email: user.email,
+            name:user.name,
+            isAdmin: user.isAdmin,
           },
           secret,
-          { expiresIn: '1d' }
+          { expiresIn: '7d' }
         );
        
-        res.status(200).send({ user: user.email, token: token });
+        res.status(200).send({ userId:user.id,email: user.email,name:user.name,isAdmin: user.isAdmin, token: token });
       } else {
         res.status(400).send('Password is wrong!');
       }
