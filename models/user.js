@@ -1,5 +1,9 @@
 const mongoose = require('mongoose');
+function convertBase64 (buffer) {
 
+    return Buffer.from(buffer, 'base64')
+
+}
 const userSchema = new mongoose.Schema({
     name: {
         type: String,
@@ -30,8 +34,8 @@ const userSchema = new mongoose.Schema({
         default: false,
     },
     image: {
-        type: String,
-        default: null,
+        data: Buffer,
+        contentType: String,
     },
     store: {
         type: String,
