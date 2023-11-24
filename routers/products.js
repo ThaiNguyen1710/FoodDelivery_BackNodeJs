@@ -292,47 +292,94 @@ router.post(`/`, uploadOptions.single('image'), async (req, res) => {
   }
 });
 
-
-router.put('/:id', async (req, res) => {
-    try {
+router.put('/:id', uploadOptions.single('image'), async (req, res) => {
+  try {
       if (!mongoose.isValidObjectId(req.params.id)) {
-        return res.status(400).send('Invalid Product Id');
+          return res.status(400).send('Invalid Product Id');
       }
-  
-      // const category = await Category.findById(req.body.category);
-      // if (!category) {
-      //   return res.status(400).send('Invalid Category');
-      // }
-      // const user = await User.findById(req.body.user);
-      //   if (!user) {
-      //       return res.status(400).send('Invalid User');
-      //   }
-  
-      const product = await Product.findByIdAndUpdate(
-        req.params.id,
-        {
-          name: req.body.name,
-          description: req.body.description,
-          image: req.body.image,
-          price: req.body.price,
-          ratings: req.body.ratings,
-          numRated: req.body.numRated,
-          isFeatured: req.body.isFeatured,
-        },
-        { new: true }
+
+      const updatedFields = {};
+
+      // Kiểm tra và cập nhật các trường có sẵn
+      if (req.body.name) {
+          updatedFields.name = req.body.name;
+      }
+
+      if (req.body.description) {
+          updatedFields.description = req.body.description;
+      }
+
+      if (req.body.price) {
+          updatedFields.price = req.body.price;
+      }
+
+      if (req.body.isFeatured) {
+          updatedFields.isFeatured = req.body.isFeatured;
+      }
+
+      // Cập nhật hình ảnh nếu có
+      if (req.file) {
+          const isValid = FILE_TYPE_MAP[req.file.mimetype];
+          if (!isValid) {
+              return res.status(400).send('Invalid image type');
+          }
+
+          updatedFields.image = {
+              data: req.file.buffer,
+              contentType: req.file.mimetype
+          };
+      }
+
+      // Sử dụng findByIdAndUpdate để cập nhật các trường đã kiểm tra
+      const updatedProduct = await Product.findByIdAndUpdate(
+          req.params.id,
+          updatedFields,
+          { new: true } // Trả về bản ghi đã được cập nhật
       );
-  
-      if (!product) {
-        return res.status(500).send('The product cannot be updated');
+
+      if (!updatedProduct) {
+          return res.status(404).send('Product not found');
       }
+
+      res.send("updated Product");
+  } catch (error) {
+      console.error('Error updating product:', error);
+      res.status(500).send('Internal Server Error');
+  }
+});
+
+
+
+// router.put('/:id', async (req, res) => {
+//     try {
+//       if (!mongoose.isValidObjectId(req.params.id)) {
+//         return res.status(400).send('Invalid Product Id');
+//       }
+//       const product = await Product.findByIdAndUpdate(
+//         req.params.id,
+//         {
+//           name: req.body.name,
+//           description: req.body.description,
+//           image: req.body.image,
+//           price: req.body.price,
+//           ratings: req.body.ratings,
+//           numRated: req.body.numRated,
+//           isFeatured: req.body.isFeatured,
+//         },
+//         { new: true }
+//       );
   
-      // res.send(product);
-      res.send("update success");
-    } catch (error) {
-      // Xử lý lỗi nếu có
-      res.status(500).send('An error occurred while processing your request');
-    }
-  });
+//       if (!product) {
+//         return res.status(500).send('The product cannot be updated');
+//       }
+  
+//       // res.send(product);
+//       res.send("update success");
+//     } catch (error) {
+//       // Xử lý lỗi nếu có
+//       res.status(500).send('An error occurred while processing your request');
+//     }
+//   });
   
 router.delete('/:id', async (req, res) => {
     try {

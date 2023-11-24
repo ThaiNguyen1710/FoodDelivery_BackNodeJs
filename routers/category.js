@@ -2,14 +2,19 @@ const {Category} = require('../models/category');
 const express = require('express');
 const router = express.Router();
 
-router.get(`/`, async (req, res) =>{
-    const categoryList = await Category.find();
+router.get('/', async (req, res) => {
+    try {
+        const categoryList = await Category.find();
 
-    if(!categoryList) {
-        res.status(500).json({success: false})
-    } 
-    res.status(200).send(categoryList);
-})
+        if (!categoryList) {
+            return res.status(500).json({ success: false, error: "Error fetching categories" });
+        }
+
+        res.status(200).json(categoryList);
+    } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+    }
+});
 router.get('/:id', async (req, res) => {
     try {
       const category = await Category.findById(req.params.id);
