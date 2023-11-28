@@ -25,9 +25,9 @@ const shipperSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    image:{
-        type: String,
-        default: null
+    image: {
+        data: Buffer,
+        contentType: String,
     },
     isFeatured: {
         type: Boolean,

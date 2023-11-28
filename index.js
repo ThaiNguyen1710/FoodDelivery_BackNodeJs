@@ -23,6 +23,7 @@ const shippersRoutes = require('./routers/shipper');
 const orderItemRoutes = require('./routers/order-item');
 const ordersRoutes = require('./routers/orders');
 const ratesRoutes = require('./routers/rated'); 
+const authRouter = require('./routers/authRouter');
 const homeRoute = require('./routers/home');  // Thêm route mới
 
 const api = process.env.API_URL;
@@ -33,6 +34,7 @@ app.use(`${api}/shipper`, shippersRoutes);
 app.use(`${api}/order`, ordersRoutes);
 app.use(`${api}/orderItem`, orderItemRoutes);
 app.use(`${api}/rated`, ratesRoutes);
+app.use(`${api}/auth`, authRouter);
 app.use('/', homeRoute);  // Sử dụng route mới tại "/"
 // Kết nối với cơ sở dữ liệu
 mongoose.connect(process.env.CONNECTION_STRING, {

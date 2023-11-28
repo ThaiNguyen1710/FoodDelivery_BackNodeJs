@@ -13,30 +13,32 @@ function authJwt() {
             // {url: /\/pbl6\/category(.*)/ , methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE'] },
             `${api}/user/login`,
             `${api}/user/register`,
+            `${api}/shipper/login`,
+            `${api}/shipper/register`,
             // { url: /\/pbl6\/user(.*)/, methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE'] },
             // { url: /\/pbl6\/shipper(.*)/, methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE'] },
             // { url: /\/pbl6\/order(.*)/, methods: ['GET', 'OPTIONS', 'POST', 'PUT', 'DELETE'] },
             // {url: /\/public\/uploads(.*)/ , methods: ['GET','OPTIONS', 'POST', 'PUT', 'DELETE'] },
+            // { url: /\/pbl6\/auth(.*)/, methods: ['GET'] },
             {url: /\/(.*)/ , methods: ['GET','OPTIONS', 'POST', 'PUT', 'DELETE'] },
         ]
     })
 }
 
-async function isRevoked(req, payload, done) {
-    if(!payload.isAdmin) {
-        done(null, true)
-    }
+// async function isRevoked(req, payload, done) {
+//     if(!payload.isAdmin) {
+//         done(null, true)
+//     }
 
-    done();
-}
+//     done();
+// }
 async function isUser(req, payload, done) {
-    if(!payload.userId) {
-        done(null, true)
+    if (payload.userId || payload.shipperId) {
+        done();
+    } else {
+        done(null, true);
     }
-
-    done();
 }
-
 
 
 module.exports = authJwt

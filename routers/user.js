@@ -47,14 +47,29 @@ router.get(`/`, async (req, res) => {
       const user = await User.findById(req.params.id).select('-passwordHash');
   
       if (!user) {
-        return res.status(404).json({ success: false, message: 'The user with the given ID was not found.' });
+        return res.status(500).json({ success: false, error: 'Error fetching user.' });
       }
   
-      res.status(200).send(user);
+      const formattedUser = {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        phone: user.phone,
+        address: user.address,
+        description: user.description,
+        isAdmin: user.isAdmin,
+        image: user.image ? `/pbl6/user/image/${user.id}` : null,
+        store: user.store,
+        openAt: user.openAt,
+        closeAt: user.closeAt
+      };
+  
+      res.send(formattedUser);
     } catch (error) {
       res.status(500).json({ success: false, error: error.message });
     }
   });
+  
   const upload = uploadOptions.single('image');
 
 router.put('/:id', async (req, res) => {
