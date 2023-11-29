@@ -7,7 +7,7 @@ authRouter.use(bodyParser.json());
 
 // Middleware xác thực
 const authenticateMiddleware = (req, res, next) => {
-  const token = req.header('Authorization');
+  const token = req.header('Authorization').split(" ")[1];
   const secret = process.env.secret;
 
   if (!token) {
