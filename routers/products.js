@@ -88,7 +88,7 @@ router.get(`/`, async (req, res) => {
       res.status(500).json({ success: false, message: error.message });
   }
 });
-router.get(`/isT`, async (req, res) => {
+router.get(`/isT`,async (req, res) => {
   try {
       let filter = {};
       if (req.query.categories) {
@@ -288,7 +288,7 @@ router.post(`/`, uploadOptions.single('image'), async (req, res) => {
       res.send("added product");
   } catch (error) {
       console.error('Error creating product:', error);
-      res.status(500).send('Internal Server Error');
+      res.status(500).send('Internal Server Error: ',error);
   }
 });
 
@@ -344,7 +344,7 @@ router.put('/:id', uploadOptions.single('image'), async (req, res) => {
       res.send("updated Product");
   } catch (error) {
       console.error('Error updating product:', error);
-      res.status(500).send('Internal Server Error');
+      res.status(500).send('Internal Server Error: ', error);
   }
 });
 
