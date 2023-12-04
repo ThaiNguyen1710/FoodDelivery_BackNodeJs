@@ -251,8 +251,8 @@ router.get(`/:id`, async (req, res) => {
 // });
 router.post(`/`, uploadOptions.single('image'), async (req, res) => {
   try {
-      const category = await Category.findById(req.body.category);
-      if (!category) return res.status(400).send('Invalid Category');
+    //   const category = await Category.findById(req.body.category);
+    //   if (!category) return res.status(400).send('Invalid Category');
       const user = await User.findById(req.body.user);
         if (!user) {
             return res.status(400).send('Invalid User');
