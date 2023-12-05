@@ -21,7 +21,7 @@ router.get(`/`, async (req, res) => {
         const orderItemList = await OrderItem.find(filter)
             .populate({
                 path: 'product',
-                select: '-image',
+                select: '', // Loại bỏ trường 'image'
             })
             .populate({
                 path: 'user',
@@ -32,12 +32,67 @@ router.get(`/`, async (req, res) => {
             return res.status(404).json({ success: false, message: 'No orderItems found' });
         }
 
-        res.status(200).send(orderItemList);
+        // Chuyển đổi thông tin sản phẩm để thêm đường dẫn hình ảnh mới
+        const formattedOrderItems = orderItemList.map(orderItem => {
+            const product = orderItem.product;
+            return {
+                _id: orderItem._id,
+                quantity: orderItem.quantity,
+                product: {
+                    id: product.id,
+                    name: product.name,
+                    description: product.description,
+                    image: product.image ? `/pbl6/product/image/${product.id}` : null, // Đường dẫn đến route mới
+                    images: product.images.map(image => `/pbl6/product//gallery/${product.id}/images/${image.id}`),
+                    price: product.price,
+                    ratings: product.ratings,
+                    numRated: product.numRated,
+                    isFeatured: product.isFeatured,
+                    user: product.user,
+                    category: product.category,
+                },
+                user: orderItem.user,
+            };
+        });
+
+        res.status(200).send(formattedOrderItems);
     } catch (error) {
         console.error('Error fetching orderItems:', error);
         res.status(500).json({ success: false, message: 'An error occurred while processing your request' });
     }
 });
+
+// router.get(`/`, async (req, res) => {
+//     try {
+//         let filter = {};
+
+//         if (req.query.products) {
+//             filter = { product: req.query.products.split(',') };
+//         }
+
+//         if (req.query.users) {
+//             filter = { ...filter, user: req.query.users.split(',') };
+//         }
+//         const orderItemList = await OrderItem.find(filter)
+//             .populate({
+//                 path: 'product',
+//                 select: ' images: product.images.map(image => `/pbl6/product//gallery/${product.id}/images/${image.id}`),',
+//             })
+//             .populate({
+//                 path: 'user',
+//                 select: '-passwordHash -image', // Loại bỏ các trường không mong muốn
+//             });
+
+//         if (!orderItemList || orderItemList.length === 0) {
+//             return res.status(404).json({ success: false, message: 'No orderItems found' });
+//         }
+
+//         res.status(200).send(orderItemList);
+//     } catch (error) {
+//         console.error('Error fetching orderItems:', error);
+//         res.status(500).json({ success: false, message: 'An error occurred while processing your request' });
+//     }
+// });
 
 router.get('/:id', async (req, res) => {
   try {
@@ -205,5 +260,44 @@ router.get(`/get/count`, async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 });
-
+router.get('/image/:id', async (req, res) => {
+    try {
+        const product = await Product.findById(req.params.id);
+  
+        if (!product || !product.image) {
+            return res.status(404).json({ success: false, message: 'Image not found' });
+        }
+  
+        // Đặt loại nội dung và gửi dữ liệu hình ảnh
+        res.contentType(product.image.contentType);
+        res.send(product.image.data);
+    } catch (error) {
+        console.error('Error retrieving image:', error);
+        res.status(500).send('Internal Server Error');
+    }
+  });
+  router.get('/gallery/:productId/images/:imageId', async (req, res) => {
+    try {
+        const productId = req.params.productId;
+        const imageId = req.params.imageId;
+  
+        const product = await Product.findById(productId);
+  
+        if (!product) {
+            return res.status(404).send('Product not found');
+        }
+  
+        const image = product.images.id(imageId);
+  
+        if (!image) {
+            return res.status(404).send('Image not found');
+        }
+  
+        res.set('Content-Type', image.contentType);
+        res.send(image.data);
+    } catch (error) {
+        console.error('Error getting image:', error);
+        res.status(500).send('Internal Server Error');
+    }
+  });
 module.exports =router;
