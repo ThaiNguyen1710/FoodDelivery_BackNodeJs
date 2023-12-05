@@ -48,7 +48,11 @@ const userSchema = new mongoose.Schema({
     closeAt: {
         type: String,
         default: null,
-    }
+    },
+    isStore: {
+        type: Boolean,
+        default: false,
+    },
 });
 
 userSchema.virtual('id').get(function () {

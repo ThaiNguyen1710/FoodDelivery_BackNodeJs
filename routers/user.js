@@ -32,6 +32,7 @@ router.get(`/`, async (req, res) => {
             isAdmin: user.isAdmin,
             image: user.image ? `/pbl6/user/image/${user.id}` : null, // Đường dẫn đến route mới
             store:user.store,
+            isStore:user.isStore,
             openAt:user.openAt,
             closeAt:user.closeAt
         };
@@ -60,6 +61,7 @@ router.get(`/`, async (req, res) => {
         isAdmin: user.isAdmin,
         image: user.image ? `/pbl6/user/image/${user.id}` : null,
         store: user.store,
+        isStore:user.isStore,
         openAt: user.openAt,
         closeAt: user.closeAt
       };
@@ -102,6 +104,7 @@ router.put('/:id', async (req, res) => {
                 description: req.body.description,
                 isAdmin: req.body.isAdmin,
                 store: req.body.store,
+                isStore:req.body.isStore,
                 openAt: req.body.openAt,
                 closeAt: req.body.closeAt
             };
@@ -268,14 +271,14 @@ router.put('/:id', async (req, res) => {
             email: user.email,
             name:user.name,
             isAdmin: user.isAdmin,
-            store:user.store,
-            
+            isStore:user.isStore,
+
           },
           secret,
           { expiresIn: '7d' }
         );
-       
-        res.status(200).send({ userId:user.id,email: user.email,name:user.name,isAdmin: user.isAdmin, token: token });
+        // res.status(200).send({ userId:user.id,email: user.email,name:user.name,isAdmin: user.isAdmin, token: token });
+        res.status(200).send({ token: token });
       } else {
         res.status(400).send('Password is wrong!');
       }
@@ -305,6 +308,7 @@ router.put('/:id', async (req, res) => {
         description: req.body.description,
         isAdmin: req.body.isAdmin,
         store:req.body.store,
+        isStore:req.body.isStore,
         openAt:req.body.openAt,
         closeAt:req.body.closeAt
       });

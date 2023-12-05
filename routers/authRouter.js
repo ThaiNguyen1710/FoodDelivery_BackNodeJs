@@ -28,7 +28,7 @@ const authenticateMiddleware = (req, res, next) => {
 authRouter.get('/', authenticateMiddleware, (req, res) => {
   // Nếu middleware authenticateMiddleware chạy mà không gặp lỗi, tức là token hợp lệ
   // Thông tin người dùng sẽ được lưu trong req.user và có thể được sử dụng ở đây
-  res.json({ message: 'Protected route', user: req.user });
+  res.json({ user: req.user });
 });
 
 
