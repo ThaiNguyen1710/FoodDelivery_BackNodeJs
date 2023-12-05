@@ -232,6 +232,22 @@ router.delete('/:id', (req, res)=>{
        return res.status(500).json({success: false, error: err}) 
     })
 })
+router.delete('/delAll/:userId', (req, res) => {
+    const userId = req.params.userId;
+
+    OrderItem.deleteMany({ user: userId })
+        .then(result => {
+            if (result.deletedCount > 0) {
+                return res.status(200).json({ success: true, message: `All orderItems for user ${userId} are deleted!` });
+            } else {
+                return res.status(404).json({ success: false, message: `No orderItems found for user ${userId}` });
+            }
+        })
+        .catch(err => {
+            return res.status(500).json({ success: false, error: err });
+        });
+});
+
 // http://localhost:8080/pbl6/orderItem/get/count?products=6553cc59c46a1274e138d6d4
 // http://localhost:8080/pbl6/orderItem/get/count?users=6553b71403d45d46c46a9624
 router.get(`/get/count`, async (req, res) => {
