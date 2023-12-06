@@ -272,7 +272,8 @@ router.put('/:id', async (req, res) => {
             name:user.name,
             isAdmin: user.isAdmin,
             isStore:user.isStore,
-            store:user.store
+            store:user.store,
+            address:user.address
           },
           secret,
           { expiresIn: '7d' }

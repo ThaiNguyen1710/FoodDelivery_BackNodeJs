@@ -184,7 +184,11 @@ router.get(`/isF`, async (req, res) => {
 });
 router.get(`/:id`, async (req, res) => {
   try {
-      const product = await Product.findById(req.params.id).populate('category').populate('user');
+      const product = await Product.findById(req.params.id).populate('category').
+      populate({
+        path: 'user',
+        select: '-passwordHash -image', 
+      } );
 
       if (!product) {
           return res.status(404).json({ success: false, message: 'Product not found' });
