@@ -61,7 +61,7 @@ router.get(`/`, async (req, res) => {
       select: 'name',
     }).populate({
       path: 'user',
-      select: 'name store address openAt closeAt', // Loại bỏ các trường không mong muốn
+      select: 'name store address openAt closeAt isStore', // Loại bỏ các trường không mong muốn
     });
       if (!productList || productList.length === 0) {
           return res.status(404).json({ success: false, message: 'No products found' });
@@ -107,7 +107,7 @@ router.get(`/isT`,async (req, res) => {
           select: 'name',
         }).populate({
           path: 'user',
-          select: 'name store address openAt closeAt', // Loại bỏ các trường không mong muốn
+          select: 'name store address openAt closeAt isStore', // Loại bỏ các trường không mong muốn
         });
 
       if (!productList || productList.length === 0) {
@@ -154,7 +154,7 @@ router.get(`/isF`, async (req, res) => {
           select: 'name',
         }).populate({
           path: 'user',
-          select: 'name store address openAt closeAt', // Loại bỏ các trường không mong muốn
+          select: 'name store address openAt closeAt isStore', // Loại bỏ các trường không mong muốn
         });
 
       if (!productList || productList.length === 0) {
