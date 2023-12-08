@@ -6,10 +6,17 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv/config');
 const authJwt = require('./helpers/jwt');
+const path = require('path');
+const {engine} = require('express-handlebars');
 const errorHandler = require('./helpers/error-handler');
 
 app.use(cors());
 app.options('*', cors())
+// Cấu hình handlebars
+app.set('views', path.join(__dirname, "views"));
+app.engine('handlebars', engine({ defaultLayout: 'main' }));
+app.set('view engine', 'handlebars');
+
 // Middleware
 app.use(express.json()); // Sử dụng express.json() để xử lý JSON
 app.use(morgan('tiny'));
@@ -24,6 +31,7 @@ const orderItemRoutes = require('./routers/order-item');
 const ordersRoutes = require('./routers/orders');
 const ratesRoutes = require('./routers/rated'); 
 const authRouter = require('./routers/authRouter');
+const paypalRouter = require('./routers/paypal');
 // const vnPayRouter = require('./routers/vnPay');
 const homeRoute = require('./routers/home');  // Thêm route mới
 
@@ -36,6 +44,7 @@ app.use(`${api}/order`, ordersRoutes);
 app.use(`${api}/orderItem`, orderItemRoutes);
 app.use(`${api}/rated`, ratesRoutes);
 app.use(`${api}/auth`, authRouter);
+app.use(`${api}/paypal`, paypalRouter);
 // app.use(`${api}/vnpay`, vnPayRouter);
 app.use('/', homeRoute);  // Sử dụng route mới tại "/"
 // Kết nối với cơ sở dữ liệu
