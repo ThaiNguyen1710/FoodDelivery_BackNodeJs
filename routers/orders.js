@@ -18,8 +18,20 @@ router.get(`/`, async (req, res) => {
         filter.user = { $in: req.query.users.split(',') };
     }
 
+
     try {
-        const orderList = await Order.find(filter).populate('user', 'email name').sort({ 'dateOrdered': -1 });
+        const orderList = await Order.find(filter).populate('user', 'email name').sort({ 'dateOrdered': -1 })
+        .populate({
+            path: 'orderLists',
+            populate: {
+                path: 'product',
+                select: 'name price',  
+                populate: {
+                    path: 'category',
+                    select: '-icon'  
+                }
+            }
+        });
 
         if (!orderList || orderList.length === 0) {
             return res.status(404).json({ success: false, message: 'No orders found' });
@@ -283,6 +295,7 @@ router.post('/', async (req, res) => {
             status: req.body.status,
             totalPrice: totalPrice,
             user: req.body.user,
+            isPay:req.body.isPay
         });
 
         // Lưu đơn hàng vào cơ sở dữ liệu

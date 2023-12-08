@@ -51,6 +51,10 @@ const orderSchema = mongoose.Schema({
         type: Date,
         default: Date.now,
     },
+    isPay: {
+        type: Boolean,
+        default: false,
+    },
 })
 
 orderSchema.virtual('id').get(function () {
