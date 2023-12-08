@@ -21,7 +21,10 @@ router.get(`/`, async (req, res) => {
         const orderItemList = await OrderItem.find(filter)
             .populate({
                 path: 'product',
-                select: '', // Loại bỏ trường 'image'
+                populate: {
+                    path: 'user',
+                    select: '-passwordHash -image',  
+                   }
             })
             .populate({
                 path: 'user',
