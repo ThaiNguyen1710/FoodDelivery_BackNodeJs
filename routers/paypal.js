@@ -3,7 +3,8 @@ const router = express.Router();
 const paypal = require('paypal-rest-sdk');
 const { OrderList } = require('../models/order-list');
 const { Order } = require('../models/order');
-
+// Tính tỷ giá hối đoái (ví dụ)
+const exchangeRate = 0.000043;
 // Cấu hình PayPal
 paypal.configure({
     'mode': 'sandbox', // sandbox or live
@@ -55,14 +56,14 @@ router.all('/:idOrder', async function (req, res) {
                 "item_list": {
                     "items": order.orderLists.map(orderList => ({
                         "name": orderList.product.name,
-                        "price": orderList.product.price.toString(),
+                        "price": (orderList.product.price * exchangeRate).toString(), // Chuyển đổi giá sang USD
                         "currency": "USD",
                         "quantity": orderList.quantity
                     }))
                 },
                 "amount": {
                     "currency": "USD",
-                    "total": total.toString()
+                    "total": (total * exchangeRate).toString() // Chuyển đổi tổng tiền sang USD
                 },
                 "description": "Hat for the best team ever"
             }]
@@ -118,7 +119,7 @@ router.get('/:idOrder/success', async (req, res) => {
             "transactions": [{
                 "amount": {
                     "currency": "USD",
-                    "total": total.toString()
+                    "total": (total * exchangeRate).toString() // Chuyển đổi tổng tiền sang USD
                 }
             }]
         };
