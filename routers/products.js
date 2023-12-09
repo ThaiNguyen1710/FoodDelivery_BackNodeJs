@@ -75,6 +75,7 @@ router.get(`/`, async (req, res) => {
               image: product.image ? `/pbl6/product/image/${product.id}` : null, // Đường dẫn đến route mới
               images: product.images.map(image => `/pbl6/product//gallery/${product.id}/images/${image.id}`),
               price: product.price,
+              priceUsd:product.priceUsd,
               ratings: product.ratings,
               numRated: product.numRated,
               isFeatured: product.isFeatured,
@@ -122,6 +123,7 @@ router.get(`/isT`,async (req, res) => {
               image: product.image ? `/pbl6/product/image/${product.id}` : null,
               images: product.images.map(image => `/pbl6/product/gallery/${product.id}/images/${image.id}`),
               price: product.price,
+              priceUsd:product.priceUsd,
               ratings: product.ratings,
               numRated: product.numRated,
               isFeatured: product.isFeatured,
@@ -169,6 +171,7 @@ router.get(`/isF`, async (req, res) => {
               image: product.image ? `/pbl6/product/image/${product.id}` : null,
               images: product.images.map(image => `/pbl6/product/gallery/${product.id}/images/${image.id}`),
               price: product.price,
+              priceUsd:product.priceUsd,
               ratings: product.ratings,
               numRated: product.numRated,
               isFeatured: product.isFeatured,
@@ -202,6 +205,7 @@ router.get(`/:id`, async (req, res) => {
           image: product.image ? `/pbl6/product/image/${product.id}` : null, // Đường dẫn đến route mới
           images: product.images.map(image => `/pbl6/product//gallery/${product.id}/images/${image.id}`),
           price: product.price,
+          priceUsd:product.priceUsd,
           ratings: product.ratings,
           numRated: product.numRated,
           isFeatured: product.isFeatured,
@@ -267,6 +271,7 @@ router.post(`/`, uploadOptions.single('image'), async (req, res) => {
           description: req.body.description,
           user: req.body.user,
           price: req.body.price,
+          priceUsd:req.body.priceUsd,
           category: req.body.category,
           numRated: req.body.numRated,
           isFeatured: req.body.isFeatured,
@@ -316,6 +321,9 @@ router.put('/:id', uploadOptions.single('image'), async (req, res) => {
       if (req.body.price) {
           updatedFields.price = req.body.price;
       }
+      if (req.body.priceUsd) {
+        updatedFields.priceUsd = req.body.priceUsd;
+    }
 
       if (req.body.isFeatured) {
           updatedFields.isFeatured = req.body.isFeatured;

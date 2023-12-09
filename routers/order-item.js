@@ -48,6 +48,7 @@ router.get(`/`, async (req, res) => {
                     image: product.image ? `/pbl6/product/image/${product.id}` : null, // Đường dẫn đến route mới
                     images: product.images.map(image => `/pbl6/product//gallery/${product.id}/images/${image.id}`),
                     price: product.price,
+                    priceUsd:product.priceUsd,
                     ratings: product.ratings,
                     numRated: product.numRated,
                     isFeatured: product.isFeatured,

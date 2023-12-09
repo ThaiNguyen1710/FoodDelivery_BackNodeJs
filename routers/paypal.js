@@ -38,7 +38,7 @@ router.all('/:idOrder', async function (req, res) {
 
         // Tính tổng tiền từ thông tin orderLists
         const total = order.orderLists.reduce((acc, orderList) => {
-            return acc + (orderList.product.price * orderList.quantity);
+            return acc + (orderList.product.priceUsd * orderList.quantity);
         }, 0);
 
         const api = process.env.API_URL;
@@ -55,7 +55,7 @@ router.all('/:idOrder', async function (req, res) {
                 "item_list": {
                     "items": order.orderLists.map(orderList => ({
                         "name": orderList.product.name,
-                        "price": orderList.product.price.toString(),
+                        "price": orderList.product.priceUsd.toString(),
                         "currency": "USD",
                         "quantity": orderList.quantity
                     }))
@@ -107,7 +107,7 @@ router.get('/:idOrder/success', async (req, res) => {
         }
 
         const total = order.orderLists.reduce((acc, orderList) => {
-            return acc + (orderList.product.price * orderList.quantity);
+            return acc + (orderList.product.priceUsd * orderList.quantity);
         }, 0);
 
         const payerId = req.query.PayerID;

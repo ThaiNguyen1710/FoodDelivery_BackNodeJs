@@ -25,7 +25,7 @@ router.get(`/`, async (req, res) => {
             path: 'orderLists',
             populate: {
                 path: 'product',
-                select: 'name price',  
+                select: 'name price priceUsd',  
                 populate: {
                     path: 'category',
                     select: '-icon'  
@@ -55,7 +55,7 @@ router.get(`/:id`, async (req, res) => {
                 path: 'orderLists',
                 populate: {
                     path: 'product',
-                    select: 'name price',  
+                    select: 'name price priceUsd',  
                     populate: {
                         path: 'category',
                         select: '-icon'  
