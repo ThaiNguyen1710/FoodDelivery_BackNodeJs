@@ -7,42 +7,122 @@ const { OrderItem } = require('../models/order-item');
 const router = express.Router();
 
 
+// router.get(`/`, async (req, res) => {
+//     let filter = {};
+
+//     if (req.query.shippers) {
+//         filter.shipper = { $in: req.query.shippers.split(',') };
+//     }
+
+//     if (req.query.users) {
+//         filter.user = { $in: req.query.users.split(',') };
+//     }
+
+
+//     try {
+//         const orderList = await Order.find(filter).populate('user', 'email name').sort({ 'dateOrdered': -1 })
+//         .populate({
+//             path: 'orderLists',
+//             populate: {
+//                 path: 'product',
+//                 select: 'name price priceUsd',  
+//                 populate: {
+//                     path: 'category',
+//                     select: '-icon'  
+//                 }
+//             }
+//         });
+
+//         if (!orderList || orderList.length === 0) {
+//             return res.status(404).json({ success: false, message: 'No orders found' });
+//         }
+
+//         res.send(orderList);
+//     } catch (error) {
+//         console.error("Error fetching orders:", error);
+//         res.status(500).send('Internal Server Error');
+//     }
+// });
 router.get(`/`, async (req, res) => {
-    let filter = {};
-
-    if (req.query.shippers) {
-        filter.shipper = { $in: req.query.shippers.split(',') };
-    }
-
-    if (req.query.users) {
-        filter.user = { $in: req.query.users.split(',') };
-    }
-
-
     try {
-        const orderList = await Order.find(filter).populate('user', 'email name').sort({ 'dateOrdered': -1 })
-        .populate({
-            path: 'orderLists',
-            populate: {
-                path: 'product',
-                select: 'name price priceUsd',  
+        let filter = {};
+
+        if (req.query.shippers) {
+            filter.shipper = { $in: req.query.shippers.split(',') };
+        }
+
+        if (req.query.users) {
+            filter.user = { $in: req.query.users.split(',') };
+        }
+
+        const orderList = await Order.find(filter)
+            .populate('user', 'email name')
+            .sort({ 'dateOrdered': -1 })
+            .populate({
+                path: 'orderLists',
                 populate: {
-                    path: 'category',
-                    select: '-icon'  
+                    path: 'product',
+                    // select: 'name description image images price priceUsd ratings numRated isFeatured user category',
+                    populate: {
+                        path: 'user',
+                        select: '-passwordHash -image -isAdmin -description -openAt -closeAt -isStore',
+                        path: 'category'
+                    }
                 }
-            }
+            }).populate({
+                path:'shipper',
+                select:'-image -passwordHash'           
         });
 
         if (!orderList || orderList.length === 0) {
             return res.status(404).json({ success: false, message: 'No orders found' });
         }
 
-        res.send(orderList);
+        // Format the orderList to include the image field
+        const formattedOrderList = orderList.map(order => {
+            const orderLists = order.orderLists.map(orderItem => {
+                const product = orderItem.product;
+                return {
+                    _id: orderItem._id,
+                    product: {
+                        id: product.id,
+                        name: product.name,
+                        description: product.description,
+                        image: product.image ? `/pbl6/product/image/${product.id}` : null,
+                        images: product.images.map(image => `/pbl6/product/gallery/${product.id}/images/${image.id}`),
+                        price: product.price,
+                        priceUsd: product.priceUsd,
+                        ratings: product.ratings,
+                        numRated: product.numRated,
+                        isFeatured: product.isFeatured,
+                        user: product.user,
+                        category: product.category,
+                    },
+                };
+            });
+
+            return {
+                _id: order._id,
+                orderLists: orderLists,
+                shippingAddress1:order.shippingAddress1,
+                shippingAddress2:order.shippingAddress2,
+                status:order.status,
+                totalPrice:order.totalPrice,
+                user:order.user,
+                shipper:order.shipper,
+                isPay:order.isPay,
+                dateOrdered:order.dateOrdered,
+                id:order.id
+            };
+        });
+
+        res.status(200).send(formattedOrderList);
     } catch (error) {
-        console.error("Error fetching orders:", error);
-        res.status(500).send('Internal Server Error');
+        console.error('Error fetching orders:', error);
+        res.status(500).json({ success: false, message: 'An error occurred while processing your request' });
     }
 });
+
 
 
 router.get(`/:id`, async (req, res) => {
