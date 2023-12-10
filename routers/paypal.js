@@ -40,7 +40,7 @@ router.all('/:idOrder', async function (req, res) {
         const total = order.orderLists.reduce((acc, orderList) => {
             return acc + (orderList.product.priceUsd * orderList.quantity);
         }, 0);
-
+        const totalShipper = total + 0.7;
         const api = process.env.API_URL;
         const create_payment_json = {
             "intent": "sale",
@@ -62,7 +62,9 @@ router.all('/:idOrder', async function (req, res) {
                 },
                 "amount": {
                     "currency": "USD",
-                    "total": total.toString()
+                    "total": total.toString(),
+                    "ship": "0.7",
+                    "totalShipper": totalShipper.toString()
                 },
                 "description": "Hat for the best team ever"
             }]
@@ -109,7 +111,7 @@ router.get('/:idOrder/success', async (req, res) => {
         const total = order.orderLists.reduce((acc, orderList) => {
             return acc + (orderList.product.priceUsd * orderList.quantity);
         }, 0);
-
+        const totalShipper = total + 0.7;
         const payerId = req.query.PayerID;
         const paymentId = req.query.paymentId;
 
@@ -118,7 +120,7 @@ router.get('/:idOrder/success', async (req, res) => {
             "transactions": [{
                 "amount": {
                     "currency": "USD",
-                    "total": total.toString()
+                    "total": totalShipper.toString()
                 }
             }]
         };
