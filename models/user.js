@@ -37,7 +37,7 @@ const userSchema = new mongoose.Schema({
         data: Buffer,
         contentType: String,
     },
-    imageStore: {
+    imgStore: {
         data: Buffer,
         contentType: String,
     },
