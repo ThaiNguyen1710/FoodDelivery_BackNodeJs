@@ -30,7 +30,7 @@ router.get(`/`, async (req, res) => {
             address:user.address,
             description: user.description,
             isAdmin: user.isAdmin,
-            image: user.image ? `/pbl6/user/image/${user.id}` : null, // Đường dẫn đến route mới
+            image: user.image ? `/pbl6/user/imgUser/${user.id}` : null, // Đường dẫn đến route mới
             imgStore: user.imgStore ? `/pbl6/user/imgStore/${user.id}` : null, // Đường dẫn đến route mới
             store:user.store,
             isStore:user.isStore,
@@ -353,7 +353,7 @@ router.get(`/get/count`, async (req, res) => {
       res.status(500).json({ success: false, error: error.message });
     }
   });
-  router.get('/image/:id', async (req, res) => {
+  router.get('/imgUser/:id', async (req, res) => {
     try {
         const user = await User.findById(req.params.id);
   

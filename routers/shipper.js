@@ -138,7 +138,7 @@ router.put('/:id', async (req, res) => {
             }
 
             // Sử dụng findByIdAndUpdate để cập nhật các trường đã kiểm tra
-            const updatedshipper = await shipper.findByIdAndUpdate(
+            const updatedshipper = await Shipper.findByIdAndUpdate(
                 req.params.id,
                 updatedFields,
                 { new: true } // Trả về bản ghi đã được cập nhật

@@ -62,7 +62,7 @@ router.get(`/`, async (req, res) => {
                 path: 'orderLists',
                 populate: {
                     path: 'product',
-                    // select: 'name description image images price priceUsd ratings numRated isFeatured user category',
+                    select: '-image',
                     populate: {
                         path: 'user',
                         select: '-passwordHash -image -isAdmin -description -openAt -closeAt -isStore -imgStore',

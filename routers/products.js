@@ -56,14 +56,14 @@ router.get(`/`, async (req, res) => {
         filter = { ...filter, user: req.query.users.split(',') };
       }
   
-      const productList = await Product.find(filter)
+      const productList = await Product.find(filter).select('-image ')
         .populate({
           path: 'category',
           select: 'name',
         })
         .populate({
           path: 'user',
-          select: '-passwordHash -image', // Loại bỏ các trường không mong muốn
+          select: '-passwordHash -image -imgStore', // Loại bỏ các trường không mong muốn
         });
   
       if (!productList || productList.length === 0) {
@@ -89,7 +89,7 @@ router.get(`/`, async (req, res) => {
             email:user.email,
             store:user.store,
             // Thêm đường dẫn hình ảnh người dùng
-            image: user.image ? `/pbl6/user/image/${user.id}` : null, // Đường dẫn đến route mới
+            image: user.image ? `/pbl6/user/imgUser/${user.id}` : null, // Đường dẫn đến route mới
             imgStore: user.imgStore ? `/pbl6/user/imgStore/${user.id}` : null, // Đường dẫn đến route mới
             phone:user.phone,
             address:user.address,
@@ -126,7 +126,7 @@ router.get(`/isT`, async (req, res) => {
         })
         .populate({
           path: 'user',
-          select: '-passwordHash -image', // Loại bỏ các trường không mong muốn
+          select: '-passwordHash -image -imgStore', // Loại bỏ các trường không mong muốn
         });
   
       if (!productList || productList.length === 0) {
@@ -152,7 +152,7 @@ router.get(`/isT`, async (req, res) => {
             email:user.email,
             store:user.store,
             // Thêm đường dẫn hình ảnh người dùng
-            image: user.image ? `/pbl6/user/image/${user.id}` : null, // Đường dẫn đến route mới
+            image: user.image ? `/pbl6/user/imgUser/${user.id}` : null, // Đường dẫn đến route mới
             imgStore: user.imgStore ? `/pbl6/user/imgStore/${user.id}` : null, // Đường dẫn đến route mới
             phone:user.phone,
             address:user.address,
@@ -189,7 +189,7 @@ router.get(`/isT`, async (req, res) => {
         })
         .populate({
           path: 'user',
-          select: '-passwordHash -image', // Loại bỏ các trường không mong muốn
+          select: '-passwordHash -image -imgStore', // Loại bỏ các trường không mong muốn
         });
   
       if (!productList || productList.length === 0) {
@@ -215,7 +215,7 @@ router.get(`/isT`, async (req, res) => {
             email:user.email,
             store:user.store,
             // Thêm đường dẫn hình ảnh người dùng
-            image: user.image ? `/pbl6/user/image/${user.id}` : null, // Đường dẫn đến route mới
+            image: user.image ? `/pbl6/user/imgUser/${user.id}` : null, // Đường dẫn đến route mới
             imgStore: user.imgStore ? `/pbl6/user/imgStore/${user.id}` : null, // Đường dẫn đến route mới
             phone:user.phone,
             address:user.address,
@@ -239,7 +239,7 @@ router.get(`/:id`, async (req, res) => {
       const product = await Product.findById(req.params.id).populate('category').
       populate({
         path: 'user',
-        select: '-passwordHash -image', 
+        select: '-passwordHash -image -imgStore', 
       } );
 
       if (!product) {
@@ -264,7 +264,7 @@ router.get(`/:id`, async (req, res) => {
             email:user.email,
             store:user.store,
             // Thêm đường dẫn hình ảnh người dùng
-            image: user.image ? `/pbl6/user/image/${user.id}` : null, // Đường dẫn đến route mới
+            image: user.image ? `/pbl6/user/imgUser/${user.id}` : null, // Đường dẫn đến route mới
             imgStore: user.imgStore ? `/pbl6/user/imgStore/${user.id}` : null, // Đường dẫn đến route mới
             phone:user.phone,
             address:user.address,

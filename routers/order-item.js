@@ -21,6 +21,7 @@ router.get(`/`, async (req, res) => {
         const orderItemList = await OrderItem.find(filter)
             .populate({
                 path: 'product',
+                select:'-image',
                 populate: {
                     path: 'user',
                     select: '-passwordHash -image -imgStore',  
@@ -280,44 +281,44 @@ router.get(`/get/count`, async (req, res) => {
         res.status(500).json({ success: false, message: 'Internal Server Error' });
     }
 });
-router.get('/image/:id', async (req, res) => {
-    try {
-        const product = await Product.findById(req.params.id);
+// router.get('/image/:id', async (req, res) => {
+//     try {
+//         const product = await Product.findById(req.params.id);
   
-        if (!product || !product.image) {
-            return res.status(404).json({ success: false, message: 'Image not found' });
-        }
+//         if (!product || !product.image) {
+//             return res.status(404).json({ success: false, message: 'Image not found' });
+//         }
   
-        // Đặt loại nội dung và gửi dữ liệu hình ảnh
-        res.contentType(product.image.contentType);
-        res.send(product.image.data);
-    } catch (error) {
-        console.error('Error retrieving image:', error);
-        res.status(500).send('Internal Server Error');
-    }
-  });
-  router.get('/gallery/:productId/images/:imageId', async (req, res) => {
-    try {
-        const productId = req.params.productId;
-        const imageId = req.params.imageId;
+//         // Đặt loại nội dung và gửi dữ liệu hình ảnh
+//         res.contentType(product.image.contentType);
+//         res.send(product.image.data);
+//     } catch (error) {
+//         console.error('Error retrieving image:', error);
+//         res.status(500).send('Internal Server Error');
+//     }
+//   });
+//   router.get('/gallery/:productId/images/:imageId', async (req, res) => {
+//     try {
+//         const productId = req.params.productId;
+//         const imageId = req.params.imageId;
   
-        const product = await Product.findById(productId);
+//         const product = await Product.findById(productId);
   
-        if (!product) {
-            return res.status(404).send('Product not found');
-        }
+//         if (!product) {
+//             return res.status(404).send('Product not found');
+//         }
   
-        const image = product.images.id(imageId);
+//         const image = product.images.id(imageId);
   
-        if (!image) {
-            return res.status(404).send('Image not found');
-        }
+//         if (!image) {
+//             return res.status(404).send('Image not found');
+//         }
   
-        res.set('Content-Type', image.contentType);
-        res.send(image.data);
-    } catch (error) {
-        console.error('Error getting image:', error);
-        res.status(500).send('Internal Server Error');
-    }
-  });
+//         res.set('Content-Type', image.contentType);
+//         res.send(image.data);
+//     } catch (error) {
+//         console.error('Error getting image:', error);
+//         res.status(500).send('Internal Server Error');
+//     }
+//   });
 module.exports =router;
