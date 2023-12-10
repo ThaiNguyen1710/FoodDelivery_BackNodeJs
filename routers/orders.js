@@ -109,6 +109,7 @@ router.get(`/`, async (req, res) => {
                 status:order.status,
                 totalPrice:order.totalPrice,
                 user:order.user,
+                phone:order.phone,
                 shipper:order.shipper,
                 isPay:order.isPay,
                 dateOrdered:order.dateOrdered,
