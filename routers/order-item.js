@@ -23,12 +23,12 @@ router.get(`/`, async (req, res) => {
                 path: 'product',
                 populate: {
                     path: 'user',
-                    select: '-passwordHash -image',  
+                    select: '-passwordHash -image -imgStore',  
                    }
             })
             .populate({
                 path: 'user',
-                select: '-passwordHash -image', // Loại bỏ các trường không mong muốn
+                select: '-passwordHash -image -imgStore', // Loại bỏ các trường không mong muốn
             });
 
         if (!orderItemList || orderItemList.length === 0) {
@@ -120,7 +120,7 @@ router.get('/:id', async (req, res) => {
           })
           .populate({
               path: 'user',
-              select: '-passwordHash -image',
+              select: '-passwordHash -image -imgStore',
           });
 
       if (!orderItem) {

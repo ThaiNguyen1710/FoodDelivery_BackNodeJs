@@ -26,7 +26,7 @@ router.get(`/`, async (req, res) => {
             })
             .populate({
                 path: 'user',
-                select: '-passwordHash -image', // Loại bỏ các trường không mong muốn
+                select: '-passwordHash -image -imgStore', // Loại bỏ các trường không mong muốn
             });
 
         if (!ratedList || ratedList.length === 0) {

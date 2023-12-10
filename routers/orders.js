@@ -65,7 +65,7 @@ router.get(`/`, async (req, res) => {
                     // select: 'name description image images price priceUsd ratings numRated isFeatured user category',
                     populate: {
                         path: 'user',
-                        select: '-passwordHash -image -isAdmin -description -openAt -closeAt -isStore',
+                        select: '-passwordHash -image -isAdmin -description -openAt -closeAt -isStore -imgStore',
                         path: 'category'
                     }
                 }
