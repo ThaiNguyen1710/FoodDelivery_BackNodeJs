@@ -335,7 +335,6 @@ router.post(`/`, uploadOptions.single('image'), async (req, res) => {
           description: req.body.description,
           user: req.body.user,
           price: req.body.price,
-          priceUsd:req.body.priceUsd,
           category: req.body.category,
           numRated: req.body.numRated,
           isFeatured: req.body.isFeatured,
@@ -355,7 +354,7 @@ router.post(`/`, uploadOptions.single('image'), async (req, res) => {
       }
 
       const product = new Product(productData);
-
+     product.priceUsd= (Number(req.body.price)/23000).toFixed(2);
       await product.save();
 
       res.send("added product");
@@ -385,9 +384,6 @@ router.put('/:id', uploadOptions.single('image'), async (req, res) => {
       if (req.body.price) {
           updatedFields.price = req.body.price;
       }
-      if (req.body.priceUsd) {
-        updatedFields.priceUsd = req.body.priceUsd;
-    }
 
       if (req.body.isFeatured) {
           updatedFields.isFeatured = req.body.isFeatured;
@@ -416,6 +412,8 @@ router.put('/:id', uploadOptions.single('image'), async (req, res) => {
       if (!updatedProduct) {
           return res.status(404).send('Product not found');
       }
+      updatedProduct.priceUsd = (Number(req.body.price)/23000).toFixed(2);
+      await updatedProduct.save();
 
       res.send("updated Product");
   } catch (error) {
