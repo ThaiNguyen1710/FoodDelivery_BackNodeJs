@@ -350,19 +350,19 @@ router.post('/', async (req, res) => {
         }
 
         // Tính tổng giá trị của orderLists
-        const totalPrices = await Promise.all(orderLists.map(async (orderListId) => {
-            try {
-                const orderList = await OrderList.findById(orderListId).populate('product', 'price');
-                const totalPrice = orderList.product.price * orderList.quantity;
-                return totalPrice;
-            } catch (error) {
-                console.error("Error fetching OrderList:", error);
-                throw error;
-            }
-        }));
+        // const totalPrices = await Promise.all(orderLists.map(async (orderListId) => {
+        //     try {
+        //         const orderList = await OrderList.findById(orderListId).populate('product', 'price');
+        //         const totalPrice = orderList.product.price * orderList.quantity;
+        //         return totalPrice;
+        //     } catch (error) {
+        //         console.error("Error fetching OrderList:", error);
+        //         throw error;
+        //     }
+        // }));
 
-        // Tính tổng giá trị của đơn hàng
-        const totalPrice = totalPrices.reduce((a, b) => a + b, 0);
+        // // Tính tổng giá trị của đơn hàng
+        // const totalPrice = totalPrices.reduce((a, b) => a + b, 0);
 
         // Tạo mới đơn hàng
         let order = new Order({
@@ -374,7 +374,7 @@ router.post('/', async (req, res) => {
             country: req.body.country,
             phone: req.body.phone,
             status: req.body.status,
-            totalPrice: totalPrice,
+            totalPrice: req.body.totalPrice,
             user: req.body.user,
             isPay:req.body.isPay
         });
