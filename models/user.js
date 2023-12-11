@@ -57,6 +57,14 @@ const userSchema = new mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    ratings: {
+        type: Number,
+        default: 0,
+    },
+    numRated: {
+        type: Number,
+        default: 0,
+    },
 });
 
 userSchema.virtual('id').get(function () {
