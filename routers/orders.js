@@ -84,6 +84,7 @@ router.get(`/`, async (req, res) => {
                 const product = orderItem.product;
                 return {
                     _id: orderItem._id,
+                    quantity:orderItem.quantity,
                     product: {
                         id: product.id,
                         name: product.name,
