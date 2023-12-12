@@ -115,6 +115,7 @@ router.get(`/`, async (req, res) => {
                 isPay:order.isPay,
                 dateOrdered:order.dateOrdered,
                 isRate:order.isRate,
+                ratings:order.ratings,
                 id:order.id
             };
         });
@@ -379,7 +380,8 @@ router.post('/', async (req, res) => {
             totalPrice: req.body.totalPrice,
             user: req.body.user,
             isPay:req.body.isPay,
-            isRate:req.body.isRate
+            isRate:req.body.isRate,
+            ratings:req.body.ratings
         });
 
         // Lưu đơn hàng vào cơ sở dữ liệu

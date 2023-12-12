@@ -57,6 +57,10 @@ const orderSchema = mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    ratings: {
+        type: Number,
+        default: 0,
+    },
 })
 
 orderSchema.virtual('id').get(function () {
