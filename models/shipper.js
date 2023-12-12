@@ -11,7 +11,7 @@ const shipperSchema = new mongoose.Schema({
     },
     phone: {
         type: String,
-        required: true,
+        default: null
     },
     address:{
         type: String,
