@@ -192,6 +192,7 @@ router.post('/login', async (req, res) => {
       if (existingshipper) {
         return res.status(400).send('Email already exists. Please use a different email.');
       }
+      console.log(req.body.email)
       // Kiểm tra xem password đã được cung cấp không
         if (!req.body.password) {
             return res.status(400).send('Yêu cầu nhập mật khẩu.');

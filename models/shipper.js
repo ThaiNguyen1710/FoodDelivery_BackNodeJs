@@ -1,5 +1,9 @@
 const mongoose = require('mongoose');
+function convertBase64 (buffer) {
 
+    return Buffer.from(buffer, 'base64')
+
+}
 const shipperSchema = new mongoose.Schema({
     name: {
         type: String,
