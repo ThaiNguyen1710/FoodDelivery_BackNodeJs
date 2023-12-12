@@ -384,7 +384,6 @@ router.put('/:id', uploadOptions.single('image'), async (req, res) => {
       if (req.body.price) {
           updatedFields.price = req.body.price;
       }
-
       if (req.body.isFeatured) {
           updatedFields.isFeatured = req.body.isFeatured;
       }
@@ -412,8 +411,11 @@ router.put('/:id', uploadOptions.single('image'), async (req, res) => {
       if (!updatedProduct) {
           return res.status(404).send('Product not found');
       }
-      updatedProduct.priceUsd = (Number(req.body.price)/23000).toFixed(2);
-      await updatedProduct.save();
+      if (req.body.price){
+        updatedProduct.priceUsd = (Number(req.body.price)/23000).toFixed(2);
+        await updatedProduct.save();
+      }
+     
 
       res.send("updated Product");
   } catch (error) {

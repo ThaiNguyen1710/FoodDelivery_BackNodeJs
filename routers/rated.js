@@ -55,7 +55,53 @@ router.get('/:id', async (req, res) => {
     }
   });
 
-  router.post('/', async (req, res) => {
+//   router.post('/', async (req, res) => {
+//     try {
+//         const product = await Product.findById(req.body.product);
+//         if (!product) {
+//             return res.status(400).send('Invalid product');
+//         }
+
+//         const user = await User.findById(req.body.user);
+//         if (!user) {
+//             return res.status(400).send('Invalid User');
+//         }
+
+//         // Kiểm tra xem đã có rated cho user và product chưa
+//         let existingRated = await Rated.findOne({ user: req.body.user, product: req.body.product });
+
+//         if (existingRated) {
+//             return res.send("Has been rated!");
+//         } else {
+//             // Nếu chưa tồn tại, tạo mới rated
+//             let rated = new Rated({
+//                 product: req.body.product,
+//                 quantity: req.body.quantity,
+//                 user: req.body.user,
+//                 comment: req.body.comment,
+//             });
+
+//             rated = await rated.save();
+
+//             if (!rated) {
+//                 return res.status(400).send('The rated cannot be created!');
+//             }
+
+//             // Cập nhật trường numRated và rating trong product
+//             product.numRated += 1;
+//             product.ratings = ((Number(product.numRated) - 1) * Number(product.ratings) + Number(req.body.quantity)) / Number(product.numRated);
+//             // product.numRated += 1;
+//             // product.ratings = Number(product.ratings) + Number(req.body.quantity);
+//             // Lưu lại product sau khi cập nhật
+//             await product.save();
+
+//             res.send(rated);
+//         }
+//     } catch (error) {
+//         res.status(500).json({ success: false, error: error.message });
+//     }
+// });
+router.post('/', async (req, res) => {
     try {
         const product = await Product.findById(req.body.product);
         if (!product) {
@@ -67,12 +113,6 @@ router.get('/:id', async (req, res) => {
             return res.status(400).send('Invalid User');
         }
 
-        // Kiểm tra xem đã có rated cho user và product chưa
-        let existingRated = await Rated.findOne({ user: req.body.user, product: req.body.product });
-
-        if (existingRated) {
-            return res.send("Has been rated!");
-        } else {
             // Nếu chưa tồn tại, tạo mới rated
             let rated = new Rated({
                 product: req.body.product,
@@ -96,67 +136,11 @@ router.get('/:id', async (req, res) => {
             await product.save();
 
             res.send(rated);
-        }
+        
     } catch (error) {
         res.status(500).json({ success: false, error: error.message });
     }
 });
-
-
-// router.post('/', async (req, res) => {
-//     try {
-//       const product = await Product.findById(req.body.product);
-//       if (!product) {
-//         return res.status(400).send('Invalid product');
-//       }
-  
-//       const user = await User.findById(req.body.user);
-//       if (!user) {
-//         return res.status(400).send('Invalid User');
-//       }
-  
-//       // Kiểm tra xem đã có rated cho user và product chưa
-//       let existingrated = await Rated.findOne({ user: req.body.user, product: req.body.product });
-  
-//       if (existingrated) {
-//         res.send("has been rated!");
-//       } else {
-//         // Nếu chưa tồn tại, tạo mới rated
-//         let rated = new Rated({
-//           product: req.body.product,
-//           quantity: req.body.quantity,
-//           user: req.body.user,
-//           comment:req.body.comment,
-//         });
-  
-//         rated = await rated.save();
-  
-//         if (!rated) {
-//           return res.status(400).send('The rated cannot be created!');
-//         }
-  
-//         res.send(rated);
-//       }
-//     } catch (error) {
-//       res.status(500).json({ success: false, error: error.message });
-//     }
-//   });
-  
-// router.put('/:id',async (req, res)=> {
-//     const rated = await Rated.findByIdAndUpdate(
-//         req.params.id,
-//         {
-//           quantity: req.body.quantity,
-//           comment:req.body.comment,
-//         },
-//         { new: true}
-//     )
-
-//     if(!rated)
-//     return res.status(400).send('the rated cannot be created!')
-
-//     res.send(rated);
-// })
 
 router.put('/:id', async (req, res) => {
     try {
