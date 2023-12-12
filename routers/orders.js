@@ -413,7 +413,8 @@ router.put('/:id', async (req, res) => {
             {
                 status: req.body.status,
                 shipper: req.body.shipper,
-                isPay: req.body.isPay
+                isPay: req.body.isPay,
+                isRate:req.body.isRate
             },
             { new: true }
         );
