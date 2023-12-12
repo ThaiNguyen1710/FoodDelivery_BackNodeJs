@@ -53,6 +53,10 @@ const orderSchema = mongoose.Schema({
         type: Boolean,
         default: false,
     },
+    isRate : {
+        type: Boolean,
+        default: false,
+    },
 })
 
 orderSchema.virtual('id').get(function () {
