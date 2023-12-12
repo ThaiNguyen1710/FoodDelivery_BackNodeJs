@@ -402,10 +402,10 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
     try {
         // Kiểm tra xem shipper có tồn tại hay không
-        const existingShipper = await Shipper.findById(req.body.shipper);
-        if (!existingShipper) {
-            return res.status(400).send('Invalid Shipper');
-        }
+        // const existingShipper = await Shipper.findById(req.body.shipper);
+        // if (!existingShipper) {
+        //     return res.status(400).send('Invalid Shipper');
+        // }
 
         // Cập nhật order
         const order = await Order.findByIdAndUpdate(
