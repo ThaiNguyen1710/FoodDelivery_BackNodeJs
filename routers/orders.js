@@ -402,7 +402,81 @@ router.post('/', async (req, res) => {
         res.status(500).send(error.message);
     }
 });
+router.post('/orderPaypal', async (req, res) => {
+    try {
+        // Kiểm tra xem user có tồn tại hay không
+        const user = await User.findById(req.body.user);
+        if (!user) {
+            return res.status(400).send('Invalid User');
+        }
 
+        // Tìm tất cả các OrderItem có user có id trùng với req.body.user
+        const orderItems = await OrderItem.find({ user: req.body.user });
+
+        // Kiểm tra xem có OrderItem nào tồn tại không
+        if (!orderItems || orderItems.length === 0) {
+            return res.status(400).send('No OrderItems found for the user');
+        }
+
+        // Tạo một mảng orderLists từ orderItems
+        const orderLists = await Promise.all(orderItems.map(async (orderItem) => {
+            try {
+                // Tạo mới OrderList từ thông tin OrderItem
+                let newOrderList = new OrderList({
+                    quantity: orderItem.quantity,
+                    product: orderItem.product,
+                });
+
+                // Lưu OrderList vào cơ sở dữ liệu
+                newOrderList = await newOrderList.save();
+
+                return newOrderList._id; // Trả về ID của OrderList vừa tạo
+            } catch (error) {
+                console.error("Error creating OrderList:", error);
+                throw error;
+            }
+        }));
+
+        // Kiểm tra xem có OrderList hợp lệ nào không
+        if (orderLists.length === 0) {
+            return res.status(400).send('No valid OrderLists found');
+        }
+
+
+        // Tạo mới đơn hàng
+        let order = new Order({
+            orderLists: orderLists,
+            shippingAddress1: req.body.shippingAddress1,
+            shippingAddress2: req.body.shippingAddress2,
+            city: req.body.city,
+            zip: req.body.zip,
+            country: req.body.country,
+            phone: req.body.phone,
+            status: req.body.status,
+            totalPrice: req.body.totalPrice,
+            user: req.body.user,
+            isPay:true,
+            isRate:req.body.isRate,
+            payed:req.body.payed,
+            ratings:req.body.ratings
+        });
+
+        // Lưu đơn hàng vào cơ sở dữ liệu
+        order = await order.save();
+
+        // Kiểm tra xem đơn hàng có được lưu thành công hay không
+        if (!order) {
+            return res.status(400).send('The order cannot be created!');
+        }
+
+        // Trả về đơn hàng đã tạo
+        res.send(order);
+
+    } catch (error) {
+        console.error("Error creating order:", error);
+        res.status(500).send(error.message);
+    }
+});
 router.put('/:id', async (req, res) => {
     try {
         // Kiểm tra xem shipper có tồn tại hay không
