@@ -131,8 +131,8 @@ router.get('/:idOrder/success', async (req, res) => {
                 console.log(JSON.stringify(payment));
 
                 // Cập nhật trạng thái isPay của đơn hàng thành true
-                await Order.findByIdAndUpdate(idOrder, { $set: { isPay: true } });
-
+                // await Order.findByIdAndUpdate(idOrder, { $set: { isPay: true } });
+                await Order.findByIdAndUpdate(idOrder, { $set: { isPay: true, payed: true } });
                 res.render('success');
             }
         });

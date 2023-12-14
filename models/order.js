@@ -61,6 +61,10 @@ const orderSchema = mongoose.Schema({
         type: Number,
         default: 0,
     },
+    payed: {
+        type: Boolean,
+        default: false,
+    },
 })
 
 orderSchema.virtual('id').get(function () {

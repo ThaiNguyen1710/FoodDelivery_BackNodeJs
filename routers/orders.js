@@ -116,6 +116,7 @@ router.get(`/`, async (req, res) => {
                 dateOrdered:order.dateOrdered,
                 isRate:order.isRate,
                 ratings:order.ratings,
+                payed:order.payed,
                 id:order.id
             };
         });
@@ -381,6 +382,7 @@ router.post('/', async (req, res) => {
             user: req.body.user,
             isPay:req.body.isPay,
             isRate:req.body.isRate,
+            payed:req.body.payed,
             ratings:req.body.ratings
         });
 
@@ -417,7 +419,8 @@ router.put('/:id', async (req, res) => {
                 shipper: req.body.shipper,
                 isPay: req.body.isPay,
                 isRate:req.body.isRate,
-                ratings:req.body.ratings
+                ratings:req.body.ratings,
+                payed:req.body.payed
             },
             { new: true }
         );
