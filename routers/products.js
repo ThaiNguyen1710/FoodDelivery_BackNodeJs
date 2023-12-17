@@ -108,6 +108,66 @@ router.get(`/`, async (req, res) => {
       res.status(500).json({ success: false, message: error.message });
     }
   });
+  router.get(`/topRated`, async (req, res) => {
+    try {
+     
+  
+      const productList = await Product.find()
+      .sort({ ratings: -1 }) // Sắp xếp giảm dần theo ratings
+      .limit(5)    
+      .select('-image ')
+        .populate({
+          path: 'category',
+          select: 'name',
+        })
+        .populate({
+          path: 'user',
+          select: '-passwordHash -image -imgStore', // Loại bỏ các trường không mong muốn
+        });
+  
+      if (!productList || productList.length === 0) {
+        return res.status(404).json({ success: false, message: 'No products found' });
+      }
+  
+      const formattedProductList = await Promise.all(productList.map(async (product) => {
+        const user = await User.findById(product.user);
+        return {
+          id: product.id,
+          name: product.name,
+          description: product.description,
+          image: product.image ? `/pbl6/product/image/${product.id}` : null,
+          images: product.images.map((image) => `/pbl6/product/gallery/${product.id}/images/${image.id}`),
+          price: product.price,
+          priceUsd: product.priceUsd,
+          ratings: product.ratings,
+          numRated: product.numRated,
+          isFeatured: product.isFeatured,
+          user: {
+            id: user.id,
+            name: user.name,
+            email:user.email,
+            store:user.store,
+            // Thêm đường dẫn hình ảnh người dùng
+            image: user.image ? `/pbl6/user/imgUser/${user.id}` : null, // Đường dẫn đến route mới
+            imgStore: user.imgStore ? `/pbl6/user/imgStore/${user.id}` : null, // Đường dẫn đến route mới
+            phone:user.phone,
+            address:user.address,
+            description:user.description,
+            openAt:user.openAt,
+            closeAt:user.closeAt,
+            isStore:user.isStore,
+            isAdmin:user.isAdmin,
+          },
+          category: product.category,
+        };
+      }));
+  
+      res.send(formattedProductList);
+    } catch (error) {
+      console.log(error)
+      // res.status(500).json({ success: false, message: error.message });
+    }
+  });
 router.get(`/isT`, async (req, res) => {
     try {
       let filter = {};
@@ -593,6 +653,7 @@ router.get('/gallery/:productId/images/:imageId', async (req, res) => {
       res.status(500).send('Internal Server Error');
   }
 });
+
 // router.get('/imgUser/:id', async (req, res) => {
 //     try {
 //         const user = await User.findById(req.params.id);
