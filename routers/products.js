@@ -114,7 +114,7 @@ router.get(`/`, async (req, res) => {
   
       const productList = await Product.find()
       .sort({ ratings: -1 }) // Sắp xếp giảm dần theo ratings
-      .limit(5)    
+      .limit(10)    
       .select('-image ')
         .populate({
           path: 'category',
