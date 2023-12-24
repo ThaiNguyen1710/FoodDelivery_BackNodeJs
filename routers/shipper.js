@@ -239,7 +239,7 @@ router.post('/login', async (req, res) => {
   // Route bắt đầu quá trình đăng ký và gửi OTP
 router.post(`/startRegistration`, async (req, res) => {
   try {
-    const { email } = req.body;
+    const { email,name,password } = req.body;
 
     // Kiểm tra xem email có tồn tại trong cơ sở dữ liệu hay không
     const existingShipper = await Shipper.findOne({ email });
@@ -275,7 +275,7 @@ router.post(`/startRegistration`, async (req, res) => {
       } else {
         console.log('Email sent: ' + info.response);
         // Lưu thông tin về OTP và thời gian hết hạn trong phiên làm việc hiện tại
-        req.session.otp = { code: otp, expiresIn: otpExpiration, email };
+        req.session.otp = { code: otp, expiresIn: otpExpiration, email,name,password };
         return res.json({ success: true, message: 'OTP sent successfully. Proceed to complete registration.' });
       }
     });
@@ -308,9 +308,10 @@ router.post(`/completeRegistration`, uploadOptions.fields([{ name: 'image', maxC
     }
 
     // Lưu thông tin khác từ req.body vào đối tượng người dùng (nếu tồn tại)
-    const shipperFields = ['name', 'phone', 'address', 'password', 'description', 'isFeatured', ];
+    const shipperFields = [ 'phone', 'address', 'password', 'description', 'isFeatured', ];
     const shipperData = {
       email: storedOTP.email,
+      name: storedOTP.name
     };
 
     shipperFields.forEach(field => {
@@ -320,8 +321,8 @@ router.post(`/completeRegistration`, uploadOptions.fields([{ name: 'image', maxC
     });
 
     // Tạo hash mật khẩu và thêm vào đối tượng người dùng
-    if (req.body.password) {
-      shipperData.passwordHash = bcrypt.hashSync(req.body.password, 10);
+    if (storedOTP.password) {
+      shipperData.passwordHash = bcrypt.hashSync(storedOTP.password, 10);
     }
 
     // Process the 'image' field
