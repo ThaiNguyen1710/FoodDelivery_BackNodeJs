@@ -5,6 +5,9 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const multer = require('multer');
 const mongoose = require('mongoose');
+const session = require('express-session');
+const otpGenerator = require('otp-generator');
+const nodemailer = require('nodemailer');
 const FILE_TYPE_MAP = {
   'image/png': 'png',
   'image/jpeg': 'jpeg',
@@ -233,6 +236,123 @@ router.post('/login', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
   });    
+  // Route bắt đầu quá trình đăng ký và gửi OTP
+router.post(`/startRegistration`, async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    // Kiểm tra xem email có tồn tại trong cơ sở dữ liệu hay không
+    const existingShipper = await Shipper.findOne({ email });
+    if (existingShipper) {
+      return res.status(400).send('Email already exists. Please use a different email.');
+    }
+
+    // Tạo mã OTP
+    const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false, alphabets: false });
+    const otpExpiration = 9999; // Thời gian hết hạn của OTP, tính bằng giây
+
+    // Gửi OTP qua email
+    const senderEmail = '6food2412@gmail.com';
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: senderEmail,
+        pass: 'osww wxqs dveb amob'
+      }
+    });
+
+    const mailOptions = {
+      from: senderEmail,
+      to: [email,senderEmail],
+      subject: 'Your OTP Code',
+      text: `Your OTP code is: ${otp}`
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+        return res.status(500).json({ error: 'Failed to send OTP' });
+      } else {
+        console.log('Email sent: ' + info.response);
+        // Lưu thông tin về OTP và thời gian hết hạn trong phiên làm việc hiện tại
+        req.session.otp = { code: otp, expiresIn: otpExpiration, email };
+        return res.json({ success: true, message: 'OTP sent successfully. Proceed to complete registration.' });
+      }
+    });
+  } catch (error) {
+    console.error('Error starting registration:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+// Route hoàn thành quá trình đăng ký
+router.post(`/completeRegistration`, uploadOptions.fields([{ name: 'image', maxCount: 1 }]), async (req, res) => {
+  try {
+    const { otp } = req.body;
+
+    // Kiểm tra xem OTP có tồn tại không
+    if (!otp) {
+      return res.status(400).send('OTP is required.');
+    }
+
+    // Kiểm tra xem session có thông tin về OTP không
+    const storedOTP = req.session.otp;
+
+    // Kiểm tra xem OTP nhập vào có khớp với OTP được gửi trong session không
+    if (!storedOTP || storedOTP.code !== otp) {
+      return res.status(400).send('Invalid OTP.');
+    }
+
+    // Kiểm tra xem thời gian hết hạn của OTP
+    if (storedOTP.expiresIn && (new Date() - storedOTP.createdAt) / 1000 > storedOTP.expiresIn) {
+      return res.status(400).send('Expired OTP.');
+    }
+
+    // Lưu thông tin khác từ req.body vào đối tượng người dùng (nếu tồn tại)
+    const shipperFields = ['name', 'phone', 'address', 'password', 'description', 'isFeatured', ];
+    const shipperData = {
+      email: storedOTP.email,
+    };
+
+    shipperFields.forEach(field => {
+      if (req.body[field]) {
+        shipperData[field] = req.body[field];
+      }
+    });
+
+    // Tạo hash mật khẩu và thêm vào đối tượng người dùng
+    if (req.body.password) {
+      shipperData.passwordHash = bcrypt.hashSync(req.body.password, 10);
+    }
+
+    // Process the 'image' field
+    if (req.files && req.files.image) {
+      const isValid = FILE_TYPE_MAP[req.files.image[0].mimetype];
+      if (!isValid) {
+        return res.status(400).send('Invalid image type for the profile picture');
+      }
+
+      shipperData.image = {
+        data: req.files.image[0].buffer,
+        contentType: req.files.image[0].mimetype
+      };
+    }
+
+    
+
+    const shipper = new Shipper(shipperData);
+
+    // Lưu người dùng vào cơ sở dữ liệu
+    await shipper.save();
+
+    // Xóa thông tin về OTP khỏi session
+    delete req.session.otp;
+
+    return res.json({ success: true, message: 'Registration successful.' });
+  } catch (error) {
+    console.error('Error completing registration:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
   router.delete('/:id', async (req, res) => {
     try {
       const shipper = await Shipper.findByIdAndRemove(req.params.id);

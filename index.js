@@ -9,7 +9,7 @@ const authJwt = require('./helpers/jwt');
 const path = require('path');
 const {engine} = require('express-handlebars');
 const errorHandler = require('./helpers/error-handler');
-
+const session = require('express-session');
 app.use(cors());
 app.options('*', cors())
 // Cấu hình handlebars
@@ -32,10 +32,19 @@ const ordersRoutes = require('./routers/orders');
 const ratesRoutes = require('./routers/rated'); 
 const authRouter = require('./routers/authRouter');
 const paypalRouter = require('./routers/paypal');
+const nodemailerRouter = require('./routers/nodeMailer');
 // const vnPayRouter = require('./routers/vnPay');
 const homeRoute = require('./routers/home');  // Thêm route mới
 
+
+
 const api = process.env.API_URL;
+const secret = process.env.secret;
+app.use(session({
+    secret: secret,
+    resave: false,
+    saveUninitialized: true,
+  }));
 app.use(`${api}/product`, productsRoutes);
 app.use(`${api}/category`, categorysRoutes);
 app.use(`${api}/user`, usersRoutes);
@@ -45,6 +54,7 @@ app.use(`${api}/orderItem`, orderItemRoutes);
 app.use(`${api}/rated`, ratesRoutes);
 app.use(`${api}/auth`, authRouter);
 app.use(`${api}/paypal`, paypalRouter);
+app.use(`${api}/sendOtp`, nodemailerRouter);
 // app.use(`${api}/vnpay`, vnPayRouter);
 app.use('/', homeRoute);  // Sử dụng route mới tại "/"
 // Kết nối với cơ sở dữ liệu
