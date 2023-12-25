@@ -118,8 +118,8 @@ router.put('/:id', async (req, res) => {
         isStore: req.body.isStore,
         openAt: req.body.openAt,
         closeAt: req.body.closeAt,
-        ratings:req.body.ratings,
-        numRated:req.body.numRated
+        ratings: req.body.ratings,
+        numRated: req.body.numRated
       };
 
       // Cập nhật hình ảnh nếu có
@@ -338,19 +338,30 @@ router.post(`/register`, uploadOptions.fields([{ name: 'image', maxCount: 1 }, {
 router.post(`/startRegistration`, async (req, res) => {
   try {
     const { email, name, password } = req.body;
-
     // Kiểm tra xem email có tồn tại trong cơ sở dữ liệu hay không
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).send('Email already exists. Please use a different email.');
     }
+    // Kiểm tra xem email có tồn tại trong cơ sở dữ liệu OTP hay không
+    let otpDocument = await Otp.findOne({ email });
 
-    // Tạo mã OTP
-    const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false, alphabets: false });
-    const otpExpiration = 9999; // Thời gian hết hạn của OTP, tính bằng giây
+    if (otpDocument) {
+      // Nếu email đã tồn tại trong OTP, cập nhật OTP mới và thời gian hết hạn
+      const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false, alphabets: false });
+      const otpExpiration = 9999; // Thời gian hết hạn của OTP, tính bằng giây
 
-    // Lưu OTP vào cơ sở dữ liệu
-    const otpDocument = new Otp({ email, name, password, otp, expiresIn: otpExpiration });
+      otpDocument.otp = otp;
+      otpDocument.expiresIn = otpExpiration;
+    } else {
+      // Nếu email không tồn tại trong OTP, tạo một bản ghi mới
+      const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false, alphabets: false });
+      const otpExpiration = 30; // Thời gian hết hạn của OTP, tính bằng giây
+
+      otpDocument = new Otp({ email, name, password, otp, expiresIn: otpExpiration });
+    }
+
+    // Lưu hoặc cập nhật OTP vào cơ sở dữ liệu
     await otpDocument.save();
 
     // Gửi OTP qua email
@@ -367,7 +378,7 @@ router.post(`/startRegistration`, async (req, res) => {
       from: senderEmail,
       to: [email, senderEmail],
       subject: 'Your OTP Code',
-      text: `Your OTP code is: ${otp}`,
+      text: `Your OTP code is: ${otpDocument.otp}`,
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
@@ -384,6 +395,7 @@ router.post(`/startRegistration`, async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+
 
 router.post(`/completeRegistration`, uploadOptions.fields([{ name: 'image', maxCount: 1 }, { name: 'imgStore', maxCount: 1 }]), async (req, res) => {
   try {
