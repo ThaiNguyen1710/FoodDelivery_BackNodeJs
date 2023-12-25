@@ -318,7 +318,7 @@ router.post('/login', async (req, res) => {
       }
   
       // Kiểm tra xem thời gian hết hạn của OTP
-      if (otpDocument.expiresIn && (new Date() - otpDocument.createdAt) / 1000 > otpDocument.expiresIn) {
+      if (otpDocument.expiresIn && (new Date() - otpDocument.updatedAt) / 1000 > otpDocument.expiresIn) {
         return res.status(400).send('Expired OTP.');
       }
   
