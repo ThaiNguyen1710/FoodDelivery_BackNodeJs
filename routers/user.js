@@ -17,6 +17,10 @@ const FILE_TYPE_MAP = {
 
 const storage = multer.memoryStorage(); // Sử dụng memory storage để không lưu file lên đĩa
 const uploadOptions = multer({ storage: storage });
+router.get('/checkSession', (req, res) => {
+  // const host = req.get('host');
+  res.send(req.session  );
+});
 router.get(`/`, async (req, res) => {
   try {
     const userList = await User.find().select('-passwordHash -image -imgStore');
@@ -462,6 +466,14 @@ router.post(`/completeRegistration`, uploadOptions.fields([{ name: 'image', maxC
     res.status(500).send('Internal Server Error');
   }
 });
+
+// router.get('/checkSession', (req, res) => {
+//   // Kiểm tra nội dung của session
+//   console.log("here",req.session);
+
+//   // Trả về một phản hồi với thông tin session
+//   res.json({ session: req.session });
+// });
 // router.post(`/startRegistration`, async (req, res) => {
 //   try {
 //     const { email, name, password } = req.body;
