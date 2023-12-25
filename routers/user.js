@@ -8,6 +8,7 @@ const mongoose = require('mongoose');
 const session = require('express-session');
 const otpGenerator = require('otp-generator');
 const nodemailer = require('nodemailer');
+const Otp = require('../models/otp');
 const FILE_TYPE_MAP = {
   'image/png': 'png',
   'image/jpeg': 'jpeg',
@@ -17,10 +18,7 @@ const FILE_TYPE_MAP = {
 
 const storage = multer.memoryStorage(); // Sử dụng memory storage để không lưu file lên đĩa
 const uploadOptions = multer({ storage: storage });
-router.get('/checkSession', (req, res) => {
-  // const host = req.get('host');
-  res.send(req.session  );
-});
+
 router.get(`/`, async (req, res) => {
   try {
     const userList = await User.find().select('-passwordHash -image -imgStore');
@@ -337,10 +335,9 @@ router.post(`/register`, uploadOptions.fields([{ name: 'image', maxCount: 1 }, {
     res.status(500).send('Internal Server Error');
   }
 });
-// // Route bắt đầu quá trình đăng ký và gửi OTP
 router.post(`/startRegistration`, async (req, res) => {
   try {
-    const { email,name,password } = req.body;
+    const { email, name, password } = req.body;
 
     // Kiểm tra xem email có tồn tại trong cơ sở dữ liệu hay không
     const existingUser = await User.findOne({ email });
@@ -352,21 +349,25 @@ router.post(`/startRegistration`, async (req, res) => {
     const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false, alphabets: false });
     const otpExpiration = 9999; // Thời gian hết hạn của OTP, tính bằng giây
 
+    // Lưu OTP vào cơ sở dữ liệu
+    const otpDocument = new Otp({ email, name, password, otp, expiresIn: otpExpiration });
+    await otpDocument.save();
+
     // Gửi OTP qua email
     const senderEmail = '6food2412@gmail.com';
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: senderEmail,
-        pass: 'osww wxqs dveb amob'
-      }
+        pass: 'osww wxqs dveb amob',
+      },
     });
 
     const mailOptions = {
       from: senderEmail,
-      to: [email,senderEmail],
+      to: [email, senderEmail],
       subject: 'Your OTP Code',
-      text: `Your OTP code is: ${otp}`
+      text: `Your OTP code is: ${otp}`,
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
@@ -375,8 +376,6 @@ router.post(`/startRegistration`, async (req, res) => {
         return res.status(500).json({ error: 'Failed to send OTP' });
       } else {
         console.log('Email sent: ' + info.response);
-        // Lưu thông tin về OTP và thời gian hết hạn trong phiên làm việc hiện tại
-        req.session.otp = { code: otp, expiresIn: otpExpiration, email,name,password };
         return res.json({ success: true, message: 'OTP sent successfully. Proceed to complete registration.' });
       }
     });
@@ -385,7 +384,7 @@ router.post(`/startRegistration`, async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
-// Route hoàn thành quá trình đăng ký
+
 router.post(`/completeRegistration`, uploadOptions.fields([{ name: 'image', maxCount: 1 }, { name: 'imgStore', maxCount: 1 }]), async (req, res) => {
   try {
     const { otp } = req.body;
@@ -395,35 +394,35 @@ router.post(`/completeRegistration`, uploadOptions.fields([{ name: 'image', maxC
       return res.status(400).send('OTP is required.');
     }
 
-    // Kiểm tra xem session có thông tin về OTP không
-    const storedOTP = req.session.otp;
+    // Tìm OTP trong cơ sở dữ liệu
+    const otpDocument = await Otp.findOne({ otp });
 
-    // Kiểm tra xem OTP nhập vào có khớp với OTP được gửi trong session không
-    if (!storedOTP || storedOTP.code !== otp) {
+    // Kiểm tra xem OTP có tồn tại trong cơ sở dữ liệu không
+    if (!otpDocument) {
       return res.status(400).send('Invalid OTP.');
     }
 
     // Kiểm tra xem thời gian hết hạn của OTP
-    if (storedOTP.expiresIn && (new Date() - storedOTP.createdAt) / 1000 > storedOTP.expiresIn) {
+    if (otpDocument.expiresIn && (new Date() - otpDocument.createdAt) / 1000 > otpDocument.expiresIn) {
       return res.status(400).send('Expired OTP.');
     }
 
     // Lưu thông tin khác từ req.body vào đối tượng người dùng (nếu tồn tại)
     const userFields = ['phone', 'address', 'password', 'description', 'isAdmin', 'store', 'isStore', 'openAt', 'closeAt'];
     const userData = {
-      email: storedOTP.email,
-      name: storedOTP.name
+      email: otpDocument.email,
+      name: otpDocument.name,
     };
 
-    userFields.forEach(field => {
+    userFields.forEach((field) => {
       if (req.body[field]) {
         userData[field] = req.body[field];
       }
     });
 
     // Tạo hash mật khẩu và thêm vào đối tượng người dùng
-    if (storedOTP.password) {
-      userData.passwordHash = bcrypt.hashSync(storedOTP.password, 10);
+    if (otpDocument.password) {
+      userData.passwordHash = bcrypt.hashSync(otpDocument.password, 10);
     }
 
     // Process the 'image' field
@@ -435,7 +434,7 @@ router.post(`/completeRegistration`, uploadOptions.fields([{ name: 'image', maxC
 
       userData.image = {
         data: req.files.image[0].buffer,
-        contentType: req.files.image[0].mimetype
+        contentType: req.files.image[0].mimetype,
       };
     }
 
@@ -448,7 +447,7 @@ router.post(`/completeRegistration`, uploadOptions.fields([{ name: 'image', maxC
 
       userData.imgStore = {
         data: req.files.imgStore[0].buffer,
-        contentType: req.files.imgStore[0].mimetype
+        contentType: req.files.imgStore[0].mimetype,
       };
     }
 
@@ -457,8 +456,8 @@ router.post(`/completeRegistration`, uploadOptions.fields([{ name: 'image', maxC
     // Lưu người dùng vào cơ sở dữ liệu
     await user.save();
 
-    // Xóa thông tin về OTP khỏi session
-    delete req.session.otp;
+    // Xóa thông tin về OTP khỏi cơ sở dữ liệu
+    await Otp.findByIdAndRemove(otpDocument._id);
 
     return res.json({ success: true, message: 'Registration successful.' });
   } catch (error) {
@@ -466,129 +465,6 @@ router.post(`/completeRegistration`, uploadOptions.fields([{ name: 'image', maxC
     res.status(500).send('Internal Server Error');
   }
 });
-
-// router.get('/checkSession', (req, res) => {
-//   // Kiểm tra nội dung của session
-//   console.log("here",req.session);
-
-//   // Trả về một phản hồi với thông tin session
-//   res.json({ session: req.session });
-// });
-// router.post(`/startRegistration`, async (req, res) => {
-//   try {
-//     const { email, name, password } = req.body;
-
-//     // Kiểm tra xem email có tồn tại trong cơ sở dữ liệu hay không
-//     const existingUser = await User.findOne({ email });
-//     if (existingUser) {
-//       return res.status(400).send('Email already exists. Please use a different email.');
-//     }
-
-//     // Tạo mã OTP
-//     const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false, alphabets: false });
-//     const otpExpiration = 9999; // Thời gian hết hạn của OTP, tính bằng giây
-
-//     // Gửi OTP qua email
-//     const senderEmail = '6food2412@gmail.com';
-//     const transporter = nodemailer.createTransport({
-//       service: 'gmail',
-//       auth: {
-//         user: senderEmail,
-//         pass: 'osww wxqs dveb amob'
-//       }
-//     });
-
-//     const mailOptions = {
-//       from: senderEmail,
-//       to: [email, senderEmail],
-//       subject: 'Your OTP Code',
-//       text: `Your OTP code is: ${otp}`
-//     };
-
-//     transporter.sendMail(mailOptions, (error, info) => {
-//       if (error) {
-//         console.log(error);
-//         return res.status(500).json({ error: 'Failed to send OTP' });
-//       } else {
-//         console.log('Email sent: ' + info.response);
-//         // Lưu thông tin về OTP, thời gian hết hạn trong phiên làm việc hiện tại, tên và mật khẩu
-//         req.session.otp = { code: otp, expiresIn: otpExpiration, email, name, password };
-//         return res.json({ success: true, message: 'OTP sent successfully. Proceed to complete registration.' });
-//       }
-//     });
-//   } catch (error) {
-//     console.error('Error starting registration:', error);
-//     res.status(500).send('Internal Server Error');
-//   }
-// });
-// router.post(`/completeRegistration`, uploadOptions.fields([{ name: 'image', maxCount: 1 }, { name: 'imgStore', maxCount: 1 }]), async (req, res) => {
-//   try {
-//     const { otp } = req.body;
-
-//     // Kiểm tra xem OTP có tồn tại không
-//     if (!otp) {
-//       return res.status(400).send('OTP is required.');
-//     }
-
-//     // Kiểm tra xem session có thông tin về OTP không
-//     const storedOTP = req.session.otp;
-
-//     // Kiểm tra xem OTP nhập vào có khớp với OTP được gửi trong session không
-//     if (!storedOTP || storedOTP.code !== otp) {
-//       return res.status(400).send('Invalid OTP.');
-//     }
-
-//     // Kiểm tra xem thời gian hết hạn của OTP
-//     if (storedOTP.expiresIn && (new Date() - storedOTP.createdAt) / 1000 > storedOTP.expiresIn) {
-//       return res.status(400).send('Expired OTP.');
-//     }
-
-//     // Lưu thông tin từ session vào đối tượng người dùng
-//     const user = new User({
-//       email: storedOTP.email,
-//       name: storedOTP.name,
-//       passwordHash: bcrypt.hashSync(storedOTP.password, 10),
-//       // Thêm các trường thông tin khác tại đây nếu cần
-//     });
-
-//     // Process the 'image' field
-//     if (req.files && req.files.image) {
-//       const isValid = FILE_TYPE_MAP[req.files.image[0].mimetype];
-//       if (!isValid) {
-//         return res.status(400).send('Invalid image type for the profile picture');
-//       }
-
-//       user.image = {
-//         data: req.files.image[0].buffer,
-//         contentType: req.files.image[0].mimetype
-//       };
-//     }
-
-//     // Process the 'imgStore' field
-//     if (req.files && req.files.imgStore) {
-//       const isValid = FILE_TYPE_MAP[req.files.imgStore[0].mimetype];
-//       if (!isValid) {
-//         return res.status(400).send('Invalid image type for the store image');
-//       }
-
-//       user.imgStore = {
-//         data: req.files.imgStore[0].buffer,
-//         contentType: req.files.imgStore[0].mimetype
-//       };
-//     }
-
-//     // Lưu người dùng vào cơ sở dữ liệu
-//     await user.save();
-
-//     // Xóa thông tin về OTP khỏi session
-//     delete req.session.otp;
-
-//     return res.json({ success: true, message: 'Registration successful.' });
-//   } catch (error) {
-//     console.error('Error completing registration:', error);
-//     res.status(500).send('Internal Server Error');
-//   }
-// });
 
 router.delete('/:id', async (req, res) => {
   try {
