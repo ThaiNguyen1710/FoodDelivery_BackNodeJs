@@ -349,14 +349,14 @@ router.post(`/startRegistration`, async (req, res) => {
     if (otpDocument) {
       // Nếu email đã tồn tại trong OTP, cập nhật OTP mới và thời gian hết hạn
       const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false, alphabets: false });
-      const otpExpiration = 9999; // Thời gian hết hạn của OTP, tính bằng giây
+      const otpExpiration = 60; // Thời gian hết hạn của OTP, tính bằng giây
 
       otpDocument.otp = otp;
       otpDocument.expiresIn = otpExpiration;
     } else {
       // Nếu email không tồn tại trong OTP, tạo một bản ghi mới
       const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false, alphabets: false });
-      const otpExpiration = 30; // Thời gian hết hạn của OTP, tính bằng giây
+      const otpExpiration = 60; // Thời gian hết hạn của OTP, tính bằng giây
 
       otpDocument = new Otp({ email, name, password, otp, expiresIn: otpExpiration });
     }
