@@ -10,7 +10,6 @@ const path = require('path');
 const {engine} = require('express-handlebars');
 const errorHandler = require('./helpers/error-handler');
 const session = require('express-session');
-const MongoDBStore = require('connect-mongodb-session')(session);
 app.use(cors());
 app.options('*', cors())
 // Cấu hình handlebars
@@ -41,19 +40,11 @@ const homeRoute = require('./routers/home');  // Thêm route mới
 
 const api = process.env.API_URL;
 const secret = process.env.secret;
-// Sử dụng connect-mongodb-session để lưu trữ session trong MongoDB
-const store = new MongoDBStore({
-    uri: process.env.CONNECTION_STRING, // Đường dẫn kết nối MongoDB
-    collection: 'sessions',
-    expires: 30000,
-  });
-  app.use(session({
-    secret: process.env.secret,
+app.use(session({
+    secret: secret,
     resave: false,
     saveUninitialized: true,
-    store: store,
   }));
-  
 app.use(`${api}/product`, productsRoutes);
 app.use(`${api}/category`, categorysRoutes);
 app.use(`${api}/user`, usersRoutes);
