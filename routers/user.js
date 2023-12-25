@@ -396,7 +396,6 @@ router.post(`/startRegistration`, async (req, res) => {
   }
 });
 
-
 router.post(`/completeRegistration`, uploadOptions.fields([{ name: 'image', maxCount: 1 }, { name: 'imgStore', maxCount: 1 }]), async (req, res) => {
   try {
     const { otp } = req.body;
