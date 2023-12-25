@@ -45,6 +45,7 @@ const secret = process.env.secret;
 const store = new MongoDBStore({
     uri: process.env.CONNECTION_STRING, // Đường dẫn kết nối MongoDB
     collection: 'sessions',
+    expires: 30000,
   });
   app.use(session({
     secret: process.env.secret,
