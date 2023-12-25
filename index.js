@@ -42,7 +42,7 @@ const api = process.env.API_URL;
 const secret = process.env.secret;
 app.use(session({
     secret: secret,
-    resave: true,
+    resave: false,
     saveUninitialized: true,
   }));
 app.use(`${api}/product`, productsRoutes);
