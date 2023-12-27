@@ -7,7 +7,7 @@ const ratedSchema = mongoose.Schema({
     },
     comment:{
         type:String,
-        required: true,
+        default: null,
     },
     product: {
         type: mongoose.Schema.Types.ObjectId,

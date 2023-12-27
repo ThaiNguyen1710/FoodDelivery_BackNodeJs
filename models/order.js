@@ -67,6 +67,7 @@ const orderSchema = mongoose.Schema({
     },
     mess: {
         type: String,
+        default:null,
     },
 })
 
