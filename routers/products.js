@@ -653,7 +653,20 @@ router.get('/gallery/:productId/images/:imageId', async (req, res) => {
       res.status(500).send('Internal Server Error');
   }
 });
+router.put('/numandrate/Zero', async (req, res) => {
+  try {
+    const result = await Product.updateMany({}, { ratings: 0, numRated: 0 });
+    
+    if (!result.ok) {
+      return res.status(400).send('Failed to update products.');
+    }
 
+    res.send('All products updated successfully.');
+  } catch (error) {
+    console.error('Error updating products:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
 // router.get('/imgUser/:id', async (req, res) => {
 //     try {
 //         const user = await User.findById(req.params.id);

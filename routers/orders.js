@@ -117,6 +117,7 @@ router.get(`/`, async (req, res) => {
                 isRate:order.isRate,
                 ratings:order.ratings,
                 payed:order.payed,
+                mess:order.mess,
                 id:order.id
             };
         });
@@ -383,6 +384,7 @@ router.post('/', async (req, res) => {
             isPay:req.body.isPay,
             isRate:req.body.isRate,
             payed:req.body.payed,
+            mess:req.body.mess,
             ratings:req.body.ratings
         });
 
@@ -458,6 +460,7 @@ router.post('/orderPaypal', async (req, res) => {
             isPay:true,
             isRate:req.body.isRate,
             payed:req.body.payed,
+            mess:req.body.mess,
             ratings:req.body.ratings
         });
 
@@ -494,7 +497,8 @@ router.put('/:id', async (req, res) => {
                 isPay: req.body.isPay,
                 isRate:req.body.isRate,
                 ratings:req.body.ratings,
-                payed:req.body.payed
+                payed:req.body.payed,
+                mess:req.body.mess
             },
             { new: true }
         );
