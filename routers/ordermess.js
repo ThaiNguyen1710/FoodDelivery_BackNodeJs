@@ -77,7 +77,6 @@ router.post('/', async (req, res) => {
                 return res.status(400).send('The ordermess cannot be created!');
             }
 
-            await order.save();
 
             res.send(ordermess);
         
