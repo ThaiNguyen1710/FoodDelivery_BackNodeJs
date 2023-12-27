@@ -551,29 +551,19 @@ router.get(`/get/userorders/:userid`, async (req, res) =>{
     } 
     res.send(userOrderList);
 })
-// router.get('/get/count', async (req, res) => {
-//     try {
-//         const orderCount = await Order.countDocuments();
-
-//         if (!orderCount) {
-//             return res.status(500).json({ success: false });
-//         }
-
-//         res.send({
-//             orderCount: orderCount
-//         });
-//     } catch (error) {
-//         console.error("Error fetching order count:", error);
-//         res.status(500).send('Internal Server Error');
-//     }
-// });
 router.get('/get/count', async (req, res) => {
     try {
-        // Lấy giá trị của tham số status từ query string
-        const status = req.query.status;
+        // Lấy giá trị của tham số status và shipper từ query string
+        const { status, shipper } = req.query;
 
-        // Tạo một đối tượng truy vấn để sử dụng tùy thuộc vào sự tồn tại của tham số status
-        const query = status ? { status: status } : {};
+        // Tạo một đối tượng truy vấn để sử dụng tùy thuộc vào sự tồn tại của tham số status và shipper
+        const query = {};
+        if (status) {
+            query.status = status;
+        }
+        if (shipper) {
+            query.shipper = shipper; // Đảm bảo shipper là ID của shipper
+        }
 
         // Sử dụng đối tượng truy vấn để lấy số lượng đơn hàng
         const orderCount = await Order.countDocuments(query);
@@ -590,6 +580,29 @@ router.get('/get/count', async (req, res) => {
         res.status(500).send('Internal Server Error');
     }
 });
+// router.get('/get/count', async (req, res) => {
+//     try {
+//         // Lấy giá trị của tham số status từ query string
+//         const status = req.query.status;
+
+//         // Tạo một đối tượng truy vấn để sử dụng tùy thuộc vào sự tồn tại của tham số status
+//         const query = status ? { status: status } : {};
+
+//         // Sử dụng đối tượng truy vấn để lấy số lượng đơn hàng
+//         const orderCount = await Order.countDocuments(query);
+
+//         if (!orderCount) {
+//             return res.status(500).json({ success: false });
+//         }
+
+//         res.send({
+//             orderCount: orderCount
+//         });
+//     } catch (error) {
+//         console.error("Error fetching order count:", error);
+//         res.status(500).send('Internal Server Error');
+//     }
+// });
 
 
 
