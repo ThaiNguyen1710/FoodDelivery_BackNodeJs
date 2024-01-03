@@ -166,6 +166,111 @@ router.put('/:id', async (req, res) => {
     res.status(500).send('Internal Server Error');
   }
 });
+// PUT route to start password change and send OTP
+router.post(`/put/startPass`, async (req, res) => {
+  try {
+    const { email, name, password } = req.body;
+    // Kiểm tra xem email có tồn tại trong cơ sở dữ liệu hay không
+    const existingUser = await User.findOne({ email });
+    if (!existingUser) {
+      return res.status(400).send('Email not exists.');
+    }
+    // Kiểm tra xem email có tồn tại trong cơ sở dữ liệu OTP hay không
+    let otpDocument = await Otp.findOne({ email });
+
+    if (otpDocument) {
+      // Nếu email đã tồn tại trong OTP, cập nhật OTP mới và thời gian hết hạn
+      const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false, alphabets: false });
+      const otpExpiration = 60; // Thời gian hết hạn của OTP, tính bằng giây
+
+      otpDocument.otp = otp;
+      otpDocument.expiresIn = otpExpiration;
+    } else {
+      // Nếu email không tồn tại trong OTP, tạo một bản ghi mới
+      const otp = otpGenerator.generate(6, { upperCase: false, specialChars: false, alphabets: false });
+      const otpExpiration = 60; // Thời gian hết hạn của OTP, tính bằng giây
+
+      otpDocument = new Otp({ email, name, password, otp, expiresIn: otpExpiration });
+    }
+
+    // Lưu hoặc cập nhật OTP vào cơ sở dữ liệu
+    await otpDocument.save();
+
+    // Gửi OTP qua email
+    const senderEmail = '6food2412@gmail.com';
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: senderEmail,
+        pass: 'osww wxqs dveb amob',
+      },
+    });
+
+    const mailOptions = {
+      from: senderEmail,
+      to: [email, senderEmail],
+      subject: 'Your OTP Code',
+      text: `Your OTP code is: ${otpDocument.otp}`,
+    };
+
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log(error);
+        return res.status(500).json({ error: 'Failed to send OTP' });
+      } else {
+        console.log('Email sent: ' + info.response);
+        return res.json({ success: true, message: 'OTP sent successfully. Proceed to complete registration.' });
+      }
+    });
+  } catch (error) {
+    console.error('Error starting registration:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+
+// PUT route to complete password change with a valid OTP
+router.put('/put/completePass', async (req, res) => {
+  try {
+    const { otp } = req.body;
+
+    // Kiểm tra xem OTP có hợp lệ không
+    const otpDocument = await Otp.findOne({ otp });
+
+    if (!otpDocument) {
+      return res.status(400).send('Invalid OTP');
+    }
+
+    // Kiểm tra xem thời gian hết hạn của OTP
+    if (otpDocument.expiresIn && (new Date() - otpDocument.updatedAt) / 1000 > otpDocument.expiresIn) {
+      return res.status(400).send('Expired OTP');
+    }
+
+    // Hash mật khẩu mới
+    const newPassword = bcrypt.hashSync(otpDocument.password, 10);
+
+    // Cập nhật mật khẩu của người dùng
+    const updatedUser = await User.findOneAndUpdate(
+      { email: otpDocument.email }, // Use the email stored in the OTP document
+      { passwordHash: newPassword },
+      { new: true }
+    );
+
+    if (!updatedUser) {
+      return res.status(404).send('User not found');
+    }
+
+    // Xóa thông tin về OTP khỏi cơ sở dữ liệu
+    await Otp.findByIdAndRemove(otpDocument._id);
+
+    res.send('Password updated');
+  } catch (error) {
+    console.error('Error completing password change:', error);
+    res.status(500).send('Internal Server Error');
+  }
+});
+
+
 
 //   const upload = uploadOptions.single('image');
 // router.put('/:id', async (req, res) => {
