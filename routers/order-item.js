@@ -63,7 +63,7 @@ router.get(`/`, async (req, res) => {
         res.status(200).send(formattedOrderItems);
     } catch (error) {
         console.error('Error fetching orderItems:', error);
-        res.status(500).json({ success: false, message: 'An error occurred while processing your request' });
+        // res.status(500).json({ success: false, message: 'An error occurred while processing your request' });
     }
 });
 

@@ -7,8 +7,8 @@ const { Order } = require('../models/order');
 // Cấu hình PayPal
 paypal.configure({
     'mode': 'sandbox', // sandbox or live
-    'client_id': 'AbJt-1D4Zer7X5p-EJHy9WQR8Dhdt94PBrj3n1q2v8ZMhSutDjuaClGqnW7XgO2Hnd0HRubjK90XuuJZ',
-    'client_secret': 'EMmS0_a45ezkRMiybz4EF4mjkE_tZ3JlsYz6ZM2fvvbsmWGan-EVaMOQHejcRgBkjfQZn4qmuYvX8lbD'
+    'client_id': 'AVCrDkfeWfnxs4j_W9mHfUrq372bzy0kdMY-TgCO2DFPeey14DA5qK94WBVNTO18d0QXp32fgIZ1lOE6',
+    'client_secret': 'EAqNKTKPFpmke-kwXT-SX1s_449XR8GyZB9cwK37X-kMHC39fcl1DVoIyizYnuwxBou7H5TDnWLDpp-y'
 });
 
 // Tạo đơn hàng và chuyển hướng đến trang thanh toán PayPal
@@ -18,7 +18,7 @@ router.all('/:idOrder', async function (req, res) {
 
     // Kiểm tra xem idOrder có tồn tại không
     if (!idOrder) {
-        return res.status(400).send("Invalid or missing 'idOrder' in the request path.");
+        return res.status(400).send("Invalid or missing 'idOrder' in the request path1111.");
     }
 
     try {
@@ -48,21 +48,21 @@ router.all('/:idOrder', async function (req, res) {
                 "payment_method": "paypal"
             },
             "redirect_urls": {
-                "return_url": `https://pbl-6-nine.vercel.app${api}/paypal/${idOrder}/success`,
-                "cancel_url": `https://pbl-6-nine.vercel.app${api}/paypal/${idOrder}/cancel`
+                "return_url": `http://localhost:8080${api}/paypal/${idOrder}/success`,
+                "cancel_url": `http://localhost:8080${api}/paypal/${idOrder}/cancel`
             },
             "transactions": [{
                 "item_list": {
                     "items": order.orderLists.map(orderList => ({
                         "name": orderList.product.name,
-                        "price": orderList.product.priceUsd.toString(),
+                        "price": orderList.product.priceUsd.toFixed(2).toString(),
                         "currency": "USD",
                         "quantity": orderList.quantity
                     }))
                 },
                 "amount": {
                     "currency": "USD",
-                    "total": total.toString()
+                    "total": total.toFixed(2).toString()
                 },
                 "description": "Hat for the best team ever"
             }]
@@ -70,13 +70,15 @@ router.all('/:idOrder', async function (req, res) {
 
         paypal.payment.create(create_payment_json, function (error, payment) {
             if (error) {
-                res.status(400).send("Has an error: " + error);
+                // res.status(400).send("Has an error: " + error);
+                console.log(error)
             } else {
                 res.send(payment);
             }
         });
     } catch (error) {
-        res.status(500).send("Internal Server Error");
+        // res.status(500).send("Internal Server Error");
+        console.log(error);
     }
 });
 
@@ -110,6 +112,8 @@ router.get('/:idOrder/success', async (req, res) => {
             return acc + (orderList.product.priceUsd * orderList.quantity);
         }, 0);
 
+       
+
         const payerId = req.query.PayerID;
         const paymentId = req.query.paymentId;
 
@@ -118,7 +122,7 @@ router.get('/:idOrder/success', async (req, res) => {
             "transactions": [{
                 "amount": {
                     "currency": "USD",
-                    "total": total.toString()
+                    "total": total.toFixed(2).toString()
                 }
             }]
         };
@@ -131,14 +135,14 @@ router.get('/:idOrder/success', async (req, res) => {
                 console.log(JSON.stringify(payment));
 
                 // Cập nhật trạng thái isPay của đơn hàng thành true
-                await Order.findByIdAndUpdate(idOrder, { $set: { payed: true } });
+                await Order.findByIdAndUpdate(idOrder, { $set: { payed: true, isPay: true } });
                 // await Order.findByIdAndUpdate(idOrder, { $set: { isPay: true, payed: true } });
                 res.render('success');
             }
         });
     } catch (error) {
         console.log(error);
-        res.status(500).send("Internal Server Error");
+        // res.status(500).send("Internal Server Error");
     }
 });
 
