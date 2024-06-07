@@ -274,7 +274,7 @@ router.post('/login', async (req, res) => {
         service: 'gmail',
         auth: {
           user: senderEmail,
-          pass: 'osww wxqs dveb amob',
+          pass: 'wmsi hbkj kmoz skwn',
         },
       });
   

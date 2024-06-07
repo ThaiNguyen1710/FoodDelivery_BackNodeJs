@@ -202,7 +202,7 @@ router.post(`/put/startPass`, async (req, res) => {
       service: 'gmail',
       auth: {
         user: senderEmail,
-        pass: 'osww wxqs dveb amob',
+        pass: 'wmsi hbkj kmoz skwn',
       },
     });
 
@@ -475,7 +475,7 @@ router.post(`/startRegistration`, async (req, res) => {
       service: 'gmail',
       auth: {
         user: senderEmail,
-        pass: 'osww wxqs dveb amob',
+        pass: 'wmsi hbkj kmoz skwn',
       },
     });
 
@@ -489,7 +489,7 @@ router.post(`/startRegistration`, async (req, res) => {
     transporter.sendMail(mailOptions, (error, info) => {
       if (error) {
         console.log(error);
-        return res.status(500).json({ error: 'Failed to send OTP' });
+        // return res.status(500).json({ error: 'Failed to send OTP' });
       } else {
         console.log('Email sent: ' + info.response);
         return res.json({ success: true, message: 'OTP sent successfully. Proceed to complete registration.' });
