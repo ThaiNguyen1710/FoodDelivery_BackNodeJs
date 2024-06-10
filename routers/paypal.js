@@ -48,8 +48,8 @@ router.all('/:idOrder', async function (req, res) {
                 "payment_method": "paypal"
             },
             "redirect_urls": {
-                "return_url": `http://localhost:8080${api}/paypal/${idOrder}/success`,
-                "cancel_url": `http://localhost:8080${api}/paypal/${idOrder}/cancel`
+                "return_url": `https://food-delivery-back-node-js.vercel.app/${api}/paypal/${idOrder}/success`,
+                "cancel_url": `https://food-delivery-back-node-js.vercel.app/${api}/paypal/${idOrder}/cancel`
             },
             "transactions": [{
                 "item_list": {
